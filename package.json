@@ -10,13 +10,12 @@
     "lint": "eslint ."
   },
   "dependencies": {
+    "@react-native-community/viewpager": "^4.1.6",
     "react": "16.13.1",
     "react-native": "0.63.2",
     "react-native-elements": "^2.2.1",
-    "react-native-gesture-handler": "^1.7.0",
-    "react-native-reanimated": "^1.13.0",
     "react-native-router-flux": "^4.2.0",
-    "react-native-screens": "^2.10.1",
+    "react-native-scrollable-tab-view": "^1.0.0",
     "react-native-vector-icons": "^7.0.0"
   },
   "devDependencies": {
@@ -26,6 +25,7 @@
     "@types/jest": "^26.0.10",
     "@types/react": "^16.9.47",
     "@types/react-native": "^0.63.10",
+    "@types/react-native-scrollable-tab-view": "^0.10.1",
     "@types/react-test-renderer": "^16.9.3",
     "babel-jest": "^25.1.0",
     "eslint": "^6.5.1",
