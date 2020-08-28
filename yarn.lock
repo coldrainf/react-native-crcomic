@@ -733,6 +733,13 @@
     exec-sh "^0.3.2"
     minimist "^1.2.0"
 
+"@egjs/hammerjs@^2.0.17":
+  version "2.0.17"
+  resolved "https://registry.npm.taobao.org/@egjs/hammerjs/download/@egjs/hammerjs-2.0.17.tgz#5dc02af75a6a06e4c2db0202cae38c9263895124"
+  integrity sha1-XcAq91pqBuTC2wICyuOMkmOJUSQ=
+  dependencies:
+    "@types/hammerjs" "^2.0.36"
+
 "@hapi/address@2.x.x":
   version "2.1.4"
   resolved "https://registry.npm.taobao.org/@hapi/address/download/@hapi/address-2.1.4.tgz?cache=0&sync_timestamp=1593993944692&other_urls=https%3A%2F%2Fregistry.npm.taobao.org%2F%40hapi%2Faddress%2Fdownload%2F%40hapi%2Faddress-2.1.4.tgz#5d67ed43f3fd41a69d4b9ff7b56e7c0d1d0a81e5"
@@ -1209,6 +1216,11 @@
   integrity sha1-A5rzX+Jr7DUAPo2G0u6cWGNUNI8=
   dependencies:
     "@types/node" "*"
+
+"@types/hammerjs@^2.0.36":
+  version "2.0.36"
+  resolved "https://registry.npm.taobao.org/@types/hammerjs/download/@types/hammerjs-2.0.36.tgz#17ce0a235e9ffbcdcdf5095646b374c2bf615a4c"
+  integrity sha1-F84KI16f+83N9QlWRrN0wr9hWkw=
 
 "@types/istanbul-lib-coverage@*", "@types/istanbul-lib-coverage@^2.0.0", "@types/istanbul-lib-coverage@^2.0.1":
   version "2.0.3"
@@ -5792,6 +5804,16 @@ react-native-elements@^2.2.1:
     react-native-ratings "^7.2.0"
     react-native-status-bar-height "^2.5.0"
 
+react-native-gesture-handler@^1.7.0:
+  version "1.7.0"
+  resolved "https://registry.npm.taobao.org/react-native-gesture-handler/download/react-native-gesture-handler-1.7.0.tgz#0ef74a5ba836832e497dc49eb1ce58baa6c617e5"
+  integrity sha1-DvdKW6g2gy5JfcSesc5YuqbGF+U=
+  dependencies:
+    "@egjs/hammerjs" "^2.0.17"
+    hoist-non-react-statics "^2.3.1"
+    invariant "^2.2.4"
+    prop-types "^15.7.2"
+
 react-native-ratings@^7.2.0:
   version "7.3.0"
   resolved "https://registry.npm.taobao.org/react-native-ratings/download/react-native-ratings-7.3.0.tgz#32e11e4ed944ba8adbbc995d601df3f131619b6f"
@@ -5799,6 +5821,13 @@ react-native-ratings@^7.2.0:
   dependencies:
     lodash "^4.17.15"
     prop-types "^15.7.2"
+
+react-native-reanimated@^1.13.0:
+  version "1.13.0"
+  resolved "https://registry.npm.taobao.org/react-native-reanimated/download/react-native-reanimated-1.13.0.tgz#1ee5d27d34bd2cee7dfad4ae9a3673300872c917"
+  integrity sha1-HuXSfTS9LO59+tSumjZzMAhyyRc=
+  dependencies:
+    fbjs "^1.0.0"
 
 react-native-router-flux@^4.2.0:
   version "4.2.0"
@@ -5823,6 +5852,11 @@ react-native-safe-area-view@^0.14.9:
   integrity sha1-kO6DgwNwENmlBVqXz5fkwdofDD0=
   dependencies:
     hoist-non-react-statics "^2.3.1"
+
+react-native-screens@^2.10.1:
+  version "2.10.1"
+  resolved "https://registry.npm.taobao.org/react-native-screens/download/react-native-screens-2.10.1.tgz?cache=0&sync_timestamp=1596691513106&other_urls=https%3A%2F%2Fregistry.npm.taobao.org%2Freact-native-screens%2Fdownload%2Freact-native-screens-2.10.1.tgz#06d22fae87ef0ce51c616c34a199726db1403b95"
+  integrity sha1-BtIvrofvDOUcYWw0oZlybbFAO5U=
 
 react-native-scrollable-tab-view@^1.0.0:
   version "1.0.0"

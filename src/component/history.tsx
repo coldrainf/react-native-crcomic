@@ -6,7 +6,7 @@ export default () => {
     return (
         <>
         <View style={{ backgroundColor: 'black',flex:1 }}>
-            <Text>这里是home</Text>
+            <Text>这里是history</Text>
         </View>
         </>
     )

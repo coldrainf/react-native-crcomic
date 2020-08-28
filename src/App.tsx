@@ -1,18 +1,51 @@
-import React from 'react';
-import {
-  Text,
-} from 'react-native';
+import React from 'react'
+import {Text, View} from 'react-native'
+import { Icon } from 'react-native-elements'
+import { Router, Scene, Tabs } from 'react-native-router-flux'
 
-import ScrollableTabView, { DefaultTabBar } from 'react-native-scrollable-tab-view';
+import Shelf from './view/shelf'
+import Search from './view/search'
+import All from './view/all'
+
+
+
+const TabIcon = ({ title, focused, iconData }: any) => {
+  return (
+    <View>
+      <Icon {...iconData} color={focused ? '#0366d6': '#555'}></Icon>
+      <Text style = {{ color: focused ? '#0366d6': '#555', fontSize: 10 }}>{title}</Text>
+    </View>
+    
+  );
+};
 
 export default () => {
-  return <ScrollableTabView
-    style={{ marginTop: 20 }}
-    initialPage={1}
-    renderTabBar={() => <DefaultTabBar />}
-  >
-    <Text tabLabel='Tab #1'>My</Text>
-    <Text tabLabel='Tab #2'>favorite</Text>
-    <Text tabLabel='Tab #3'>project</Text>
-  </ScrollableTabView>;
+  return (<Router>
+    <Scene hideNavBar tabBarPosition="bottom">
+      <Tabs
+        key="tabbar"
+        swipeEnabled
+        wrap={false}
+        showLabel={false}
+      >
+        <Scene
+          key="shelf"
+          component={Shelf}
+          title="书架"
+          icon={TabIcon}
+          iconData ={{ name:'book', type:'entypo' }}
+        />
+
+        <Scene
+          key="all"
+          component={All}
+          title="发现"
+          icon={TabIcon}
+          iconData ={{ name:'find', type:'antdesign' }}
+        />
+      </Tabs>
+      <Scene key="search" component={Search} title="搜索" />
+    </Scene>
+
+  </Router>)
 }
