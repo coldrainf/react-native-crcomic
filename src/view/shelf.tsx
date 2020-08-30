@@ -1,37 +1,36 @@
 import React from 'react'
 import { View, StyleSheet } from 'react-native'
-import ScrollableTabView, { DefaultTabBar } from 'react-native-scrollable-tab-view'
+import TabView from 'react-native-scrollable-tab-view'
+import { connect } from 'react-redux'
 
-import TabBar from '../component/tabbar'
+import TabBar from '../component/tabBar'
 import Collection from '../component/collection'
 import History from '../component/history'
+import Top from '../component/top'
 
 
-export default () => {
-    return       <ScrollableTabView
-    renderTabBar={() => (<TabBar
-    // containerWidth={20}
-    backgroundColor={'#f4f4f4'}
-    tabUnderlineDefaultWidth={20} // default containerWidth / (numberOfTabs * 4)
-    tabUnderlineScaleX={3} // default 3
-    activeColor={"#0af"}
-    inactiveColor={"#333"}
-    style={{width:200,alignSelf:'center'}}
-    />)}> 
-        <Collection tabLabel='收藏'></Collection>
-        <History tabLabel='历史'></History>
-  </ScrollableTabView>;
+const Shelf = (props: Theme) => {
+  return (
+    <>
+      <Top></Top>
+      <TabView renderTabBar={props1 => (
+        <View style={{backgroundColor: props.theme}}>
+          <TabBar {...props1} tabUnderlineDefaultWidth={20} activeColor={"#fff"} inactiveColor={"#eee"} style={{ ...styles.tabBar, backgroundColor: props.theme }} />
+        </View>
+      )}>
+        <Collection tabLabel='收藏' />
+        <History tabLabel='历史' />
+      </TabView>
+    </>
+  );
 }
 
 const styles = StyleSheet.create({
   tabBar: {
-    width: 100,
-    alignSelf: 'center'
-  },
-  tabBarUnderline: {
-    width: 30,
-    height: 2,
-    alignSelf: 'center'
-    // justifyContent: 'cnt',
+    width: 200,
+    alignSelf: 'center',
+    borderWidth: 0
   }
 })
+
+export default connect((state: Theme) => ({ theme: state.theme }))(Shelf)

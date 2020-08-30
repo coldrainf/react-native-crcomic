@@ -3,30 +3,23 @@ import {StyleSheet,
     Text,
     View,
     Animated,
-    TouchableNativeFeedback,
-    TouchableOpacity,
-    Platform
 } from 'react-native'
 
+import Button from './button'
 
-
-export default class CustomTabBar extends Component {
+export default class TabBar extends Component<any> {
     constructor(props: any) {
         super(props);
-
         this.state = {
             activeDefaultColor: '#08086b',
             inactiveDefaultColor: '#666666'
         }
     }
     
-    _renderTab(name, page, isTabActive, onPressHandler) {
-        const { textStyle } = this.props;
+    _renderTab(name: string, page: number, isTabActive: boolean, onPressHandler: Function) {
         const textColor = isTabActive ? this.props.activeColor : this.props.inactiveColor;
         
         const fontWeight = isTabActive ? 'bold' : 'normal';
-
-        const Button = Platform.OS == 'ios' ? ButtonIos : ButtonAndroid;
         
         return (<Button
                     style={{flex: 1}}
@@ -37,7 +30,7 @@ export default class CustomTabBar extends Component {
                     onPress={() => onPressHandler(page)}
                 >
                     <View style={styles.tab}>
-                        <Text style={[{color: textColor, fontWeight } ]}>
+                        <Text style={[{color: textColor, fontWeight, fontSize: isTabActive ? 17: 16 } ]}>
                             {name}
                         </Text>
                     </View>
@@ -45,7 +38,8 @@ export default class CustomTabBar extends Component {
       }
 
       _renderUnderline() {
-        const containerWidth = this.props.containerWidth;
+        // const containerWidth = this.props.containerWidth;
+        const containerWidth = 200;
         const numberOfTabs = this.props.tabs.length;
         const underlineWidth = this.props.tabUnderlineDefaultWidth ? this.props.tabUnderlineDefaultWidth : containerWidth / (numberOfTabs * 2);
         const scale = this.props.tabUnderlineScaleX ? this.props.tabUnderlineScaleX : 3;
@@ -64,9 +58,8 @@ export default class CustomTabBar extends Component {
             inputRange: [0, 1],
             outputRange: [0,  containerWidth / numberOfTabs],
         });
-        console.log(translateX)
 
-        const scaleValue = (defaultScale) => {
+        const scaleValue = (defaultScale: number) => {
             let arr = new Array(numberOfTabs * 2);
             return arr.fill(0).reduce(function(pre, cur, idx){
                 idx == 0 ? pre.inputRange.push(cur) : pre.inputRange.push(pre.inputRange[idx-1] + 0.5);
@@ -84,7 +77,7 @@ export default class CustomTabBar extends Component {
                 {
                     transform: [
                         { translateX },
-                        { scaleX }
+                        { scaleX },
                     ],
                 },
                 this.props.underlineStyle,
@@ -96,7 +89,7 @@ export default class CustomTabBar extends Component {
       render() {
         return (
             <View style={[styles.tabs, {backgroundColor: this.props.backgroundColor}, this.props.style]}>
-                {this.props.tabs.map((name, page) => {
+                {this.props.tabs.map((name: string, page: number) => {
                 const isTabActive = this.props.activeTab === page;
                 return this._renderTab(name, page, isTabActive, this.props.goToPage)
                 })}
@@ -107,22 +100,6 @@ export default class CustomTabBar extends Component {
         );
     };
 }
-
-
-
-const ButtonAndroid = (props) => (
-        <TouchableNativeFeedback
-            delayPressIn={0}
-            background={TouchableNativeFeedback.SelectableBackground()}
-            {...props}
-        >
-            {props.children}
-        </TouchableNativeFeedback>);
-
-const ButtonIos = (props) => (<TouchableOpacity {...props}>
-      {props.children}
-    </TouchableOpacity>);
-
 
 const styles = StyleSheet.create({
   tab: {

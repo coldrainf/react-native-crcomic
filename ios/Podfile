@@ -12,6 +12,8 @@ target 'crcomic' do
 
   pod 'react-native-viewpager', :path => '../node_modules/@react-native-community/viewpager'
 
+  pod 'BVLinearGradient', :path => '../node_modules/react-native-linear-gradient'
+
   target 'crcomicTests' do
     inherit! :complete
     # Pods for testing

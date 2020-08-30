@@ -1,11 +1,15 @@
 import React from 'react'
 import { Text, View } from 'react-native'
 
-export default () => {
+interface Props {
+    tabLabel: any,
+    
+}
+export default (props: Props) => {
 
     return (
         <>
-        <View style={{ backgroundColor: 'black',flex:1 }}>
+        <View style={{ flex:1 }}>
             <Text>这里是history</Text>
         </View>
         </>
