@@ -14,6 +14,7 @@ const ButtonAndroid = (props: TouchableNativeFeedbackProps0) => (
             background={TouchableNativeFeedback.SelectableBackground()}
             accessible={true}
             accessibilityTraits='button'
+            onPress={props.onPress}
             {...props}
         >
             {props.children}

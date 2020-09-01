@@ -24,9 +24,7 @@ export default class TabBar extends Component<any> {
         return (<Button
                     style={{flex: 1}}
                     key={name}
-                    accessible={true}
                     accessibilityLabel={name}
-                    accessibilityTraits='button'
                     onPress={() => onPressHandler(page)}
                 >
                     <View style={styles.tab}>

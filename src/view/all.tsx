@@ -47,31 +47,45 @@ const All = (props: Props) => {
                                 key={i}
                                 title={f.title}
                                 buttonStyle={{ backgroundColor: props.theme }}
-                                containerStyle={styles.filterBtnContainer}
+                                containerStyle={{ ...styles.filterBtnContainer, borderColor: '#fff', borderWidth: filterIndex == i ? 1 : 0 }}
                                 iconRight={true}
                                 icon={React.createElement(filterIcon)}
+                                onPress={() => { setFilterIndex(i) }}
                             />
                         )
                     }
-
                 </View>
-                <FlatList
-                    data={res.data}
-                    renderItem={Item}
-                    keyExtractor={(item,k) => k.toString()}
-                    horizontal={false}
-                    numColumns={3}
-                    columnWrapperStyle={styles.itemContainer}
-                />
-                {/* {
-                    filter.map((f, i) =>
-                        <Modal isVisible={i == filterIndex} key={i} coverScreen={false}>
-                            <View style={{ flex: 1 }}>
-                                <Text>I am the modal content!{f.title}</Text>
-                            </View>
-                        </Modal>
-                    )
-                } */}
+                <View>
+                    <FlatList
+                        data={res.data}
+                        renderItem={Item}
+                        keyExtractor={(item, k) => k.toString()}
+                        horizontal={false}
+                        numColumns={3}
+                        columnWrapperStyle={styles.itemContainer}
+                    />
+                    {
+                        filter.map((f, i) =>
+                            <Modal
+                                isVisible={i == filterIndex}
+                                key={i}
+                                coverScreen={false}
+                                onBackdropPress={() => setFilterIndex(-1)}
+                                animationIn='lightSpeedIn'
+                                animationOut='lightSpeedOut'
+                                animationInTiming={200}
+                                animationOutTiming={10}
+                                backdropTransitionInTiming={0}
+                                backdropTransitionOutTiming={0}
+                            >
+                                <View style={{ position: 'absolute', top: -20, left: -20, width: 720, height: 200, backgroundColor: '#fff' }}>
+                                    <Text>{f.title}</Text>
+                                </View>
+                            </Modal>
+                        )
+                    }
+                </View>
+
             </View>
         </>
     )

@@ -1,5 +1,5 @@
-import React, {useRef} from 'react'
-import { View, Text,ActivityIndicator, StyleSheet } from 'react-native'
+import React from 'react'
+import { View, Text,ActivityIndicator, StyleSheet,UIManager,findNodeHandle } from 'react-native'
 import { Image } from 'react-native-elements'
 import LinearGradient from 'react-native-linear-gradient'
 
@@ -9,13 +9,8 @@ const Item = (props: any) => {
     let index = props.index,
         item = props.item
 
-    return (<View style={styles.container}>
-         <Button onPress={()=>{}} style={{zIndex: 1000, position:'absolute',top: 0,left:0, width: 111}}>
-            <LinearGradient colors={["rgba(0,0,0,0)","rgba(0,0,0,0)","rgba(0,0,0,0)","rgba(0,0,0,.1)","rgba(0,0,0,.6)"]} style={{height:148}}>
-                    <Text style={styles.origin}>漫画堆</Text>
-                </LinearGradient>
-        </Button>
-            <Image
+    return (<View style={styles.container} >
+        <Image
             source={{ 
                 uri: item.cover, 
                 headers: { Referer: item.cover } 
@@ -25,14 +20,12 @@ const Item = (props: any) => {
             placeholderStyle={styles.placeholderStyle}
             containerStyle={styles.imageContainer}
         >
-
-
         </Image>
-
-
-
-
-        
+        <Button onPress={()=>{}} hitSlop={{bottom: 50}}>
+            <LinearGradient colors={["rgba(0,0,0,0)","rgba(0,0,0,0)","rgba(0,0,0,0)","rgba(0,0,0,.1)","rgba(0,0,0,.6)"]} style={styles.btn}>
+                <Text style={styles.origin}>漫画堆</Text>
+            </LinearGradient>
+        </Button>
         <Text style={styles.name}>{item.name}</Text>
         <Text style={styles.lastChapter}>更新至：{item.lastChapterName}</Text>
     </View>)
@@ -43,11 +36,10 @@ const styles = StyleSheet.create({
     container: {
         width: 111,
         marginVertical: 10,
-        position: 'relative'
     },
     imageContainer: {
         borderRadius: 4,
-        zIndex: 0
+        zIndex: 0,
     },
     image: {
         width: 111,
@@ -55,6 +47,14 @@ const styles = StyleSheet.create({
     },
     placeholderStyle: {
         backgroundColor: '#eee'
+    },
+    btn: {
+        zIndex: 100,
+        position: 'absolute',
+        top:0,
+        left:0, 
+        width: 111, 
+        height: 148
     },
     name: {
         fontSize: 13
