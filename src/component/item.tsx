@@ -23,7 +23,7 @@ const Item = (props: any) => {
         </Image>
         <Button onPress={()=>{}} hitSlop={{bottom: 50}}>
             <LinearGradient colors={["rgba(0,0,0,0)","rgba(0,0,0,0)","rgba(0,0,0,0)","rgba(0,0,0,.1)","rgba(0,0,0,.6)"]} style={styles.btn}>
-                <Text style={styles.origin}>漫画堆</Text>
+                <Text style={styles.origin}>{item.originName}</Text>
             </LinearGradient>
         </Button>
         <Text style={styles.name}>{item.name}</Text>

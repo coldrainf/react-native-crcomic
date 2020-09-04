@@ -1,9 +1,10 @@
 import React, { useState, useEffect } from 'react'
 import { Text, View, StyleSheet, FlatList } from 'react-native'
 import { connect } from 'react-redux'
-import { Button, Icon } from 'react-native-elements'
+import { Button, Icon, ButtonGroup } from 'react-native-elements'
 import Modal from 'react-native-modal'
 
+import api from '../../config/api'
 import Top from '../component/top'
 import SearchBar from '../component/searchBar'
 import Item from '../component/item'
@@ -14,50 +15,54 @@ interface Props {
 
 const filterIcon = () => <Icon name='caretdown' type='antdesign' color='#fff' size={10} />
 
-
-const res = { "code": 0, "data": [{ "id": 41700, "name": "只要可爱即使是变态你也会喜欢我吧", "cover": "shttps://images.dmzj.com/webpic/13/zykajssbtnyhxhwbV1.jpg", "lastChapterId": 104543, "lastChapterName": "第27话" }, { "id": 20926, "name": "妖神记", "cover": "https://images.dmzj.com/img/webpic/4/1447215436.jpg", "lastChapterId": 76532, "lastChapterName": "第174话 回归（下）" }, { "id": 40135, "name": "别当欧尼酱了！", "cover": "https://images.dmzj.com/webpic/18/200829bdonjl.jpg", "lastChapterId": 107317, "lastChapterName": "第42话" }, { "id": 20844, "name": "我家大师兄脑子有坑", "cover": "https://images.dmzj.com/img/webpic/7/1002475871439187470.jpg", "lastChapterId": 77290, "lastChapterName": "第307话" }, { "id": 45854, "name": "看得见的女孩", "cover": "https://images.dmzj.com/webpic/4/200307kdjdnh.jpg", "lastChapterId": 101926, "lastChapterName": "连载27" }, { "id": 29973, "name": "再见龙生你好人生", "cover": "https://images.dmzj.com/webpic/18/zaijianrenshengnihaolongsheng.jpg", "lastChapterId": 101372, "lastChapterName": "第50话" }, { "id": 14841, "name": "狂赌之渊", "cover": "https://images.dmzj.com/webpic/18/200612kdzy.jpg", "lastChapterId": 106879, "lastChapterName": "第77话" }, { "id": 46745, "name": "身为暗杀者的我明显比勇者还强", "cover": "https://images.dmzj.com/webpic/17/181212anshazhe.jpg", "lastChapterId": 107250, "lastChapterName": "第18话" }, { "id": 50758, "name": "久保同学不放过我", "cover": "https://images.dmzj.com/webpic/19/jiubaotongxue0821.jpg", "lastChapterId": 102341, "lastChapterName": "第38话" }, { "id": 46505, "name": "我家女友可不止可爱呢", "cover": "https://images.dmzj.com/webpic/13/nvyou20200618.jpg", "lastChapterId": 107110, "lastChapterName": "连载63" }, { "id": 33322, "name": "完全没有恋爱感情的青梅竹马", "cover": "https://images.dmzj.com/webpic/8/wqmylagqdqmzm6893l.jpg", "lastChapterId": 106263, "lastChapterName": "出张篇" }, { "id": 38191, "name": "为了女儿击倒魔王", "cover": "https://images.dmzj.com/webpic/14/weilenverjidaomowang.jpg", "lastChapterId": 106329, "lastChapterName": "第31话" }, { "id": 43534, "name": "不熟练的两人", "cover": "https://images.dmzj.com/webpic/13/bsldlr190620.jpg", "lastChapterId": 99322, "lastChapterName": "第39话" }, { "id": 47139, "name": "社畜女梦魔的故事", "cover": "https://images.dmzj.com/webpic/4/scnmydgs20190807.jpg", "lastChapterId": 94135, "lastChapterName": "新年祝福2" }, { "id": 27708, "name": "崩坏3rd", "cover": "https://images.dmzj.com/img/webpic/16/1017039361514025908.jpg", "lastChapterId": 102426, "lastChapterName": "异乡篇 第六话 袭击" }] }
-
-
 const All = (props: Props) => {
-    let [kw, setKw] = useState('')
-    let [filter, setFilter] = useState([
-        {
-            title: '漫源',
-        },
-        {
-            title: '题材'
-        },
-        {
-            title: '进度'
-        },
-        {
-            title: '地区'
-        },
-    ])
-    let [filterIndex, setFilterIndex] = useState(0)
+    let [filterData, setFilterData] = useState([[]] as ResData)
+    let [filter, setFilter] = useState([0])
+    let [filterSelect, setFilterSelect] = useState(-1)
+    let [filterLoading, setFilterLoading] = useState(true)
+
+    useEffect(() => {
+        api('/all/filter').then(res => {
+            setFilterLoading(false)
+            if(res.code) return
+            setFilterData(res.data)
+            setFilter(Array(res.data.length).fill(0))
+        })
+    }, [])
+
+
+    let [list, setList] = useState([] as ResData)
+    useEffect(() => {
+        if(!filterData[0][0]) return
+        api(`/${(filterData[0][0].data as Array<BaseData>)[filter[0]].id}/all`).then(res => {
+            if(res.code) return
+            setList(res.data)
+        })
+    }, [filter])
     return (
         <>
             <Top></Top>
-            <View>
-                <SearchBar onChangeText={setKw} value={kw} placeholder='搜索' style={styles.searchBar} />
+            <View style={styles.flex}>
+                <SearchBar placeholder='搜索' disabled style={styles.searchBar} />
                 <View style={{ ...styles.filterContainer, backgroundColor: props.theme }}>
                     {
-                        filter.map((f, i) =>
+                        filterData[filter[0]].filter(f => f.id != 'order').map((f, i) =>
                             <Button
                                 key={i}
-                                title={f.title}
+                                title={f.name}
                                 buttonStyle={{ backgroundColor: props.theme }}
-                                containerStyle={{ ...styles.filterBtnContainer, borderColor: '#fff', borderWidth: filterIndex == i ? 1 : 0 }}
+                                containerStyle={{ ...styles.filterBtnContainer, borderColor: '#fff', borderWidth: filterSelect == i ? 1 : 0 }}
                                 iconRight={true}
+                                loading={filterLoading}
                                 icon={React.createElement(filterIcon)}
-                                onPress={() => { setFilterIndex(i) }}
+                                onPress={() => { setFilterSelect(i) }}
                             />
                         )
                     }
                 </View>
-                <View>
+                <View style={styles.flex}>
                     <FlatList
-                        data={res.data}
+                        data={list}
                         renderItem={Item}
                         keyExtractor={(item, k) => k.toString()}
                         horizontal={false}
@@ -65,21 +70,33 @@ const All = (props: Props) => {
                         columnWrapperStyle={styles.itemContainer}
                     />
                     {
-                        filter.map((f, i) =>
+                        filterData[filter[0]].filter(f => f.id != 'order').map((f, i) =>
                             <Modal
-                                isVisible={i == filterIndex}
+                                isVisible={i == filterSelect}
                                 key={i}
                                 coverScreen={false}
-                                onBackdropPress={() => setFilterIndex(-1)}
+                                onBackdropPress={() => setFilterSelect(-1)}
                                 animationIn='lightSpeedIn'
                                 animationOut='lightSpeedOut'
                                 animationInTiming={200}
                                 animationOutTiming={10}
                                 backdropTransitionInTiming={0}
                                 backdropTransitionOutTiming={0}
+                                style={styles.modal}
                             >
-                                <View style={{ position: 'absolute', top: -20, left: -20, width: 720, height: 200, backgroundColor: '#fff' }}>
-                                    <Text>{f.title}</Text>
+                                <View style={styles.modalView}>
+                                    {
+                                        (filterData[filter[0]][i].data as Array<BaseData>).map((d, index) => (
+                                            <Button
+                                                type='outline'
+                                                title={d.name}
+                                                containerStyle={styles.modalBtnContainer}
+                                                buttonStyle={styles.modalBtn}
+                                                titleStyle={styles.modalBtnTitle}
+                                                onPress={() => {let tmp = [...filter];tmp[i]=index;setFilter(tmp);setFilterSelect(-1) }}
+                                            />
+                                        ))
+                                    }
                                 </View>
                             </Modal>
                         )
@@ -94,6 +111,9 @@ const All = (props: Props) => {
 export default connect((state: Theme) => ({ theme: state.theme }))(All)
 
 const styles = StyleSheet.create({
+    flex: {
+        flex: 1,
+    },
     searchBar: {
         paddingHorizontal: 40
     },
@@ -108,7 +128,26 @@ const styles = StyleSheet.create({
     itemContainer: {
         justifyContent: 'space-evenly'
     },
-    overlay: {
-        marginTop: 99
+    modal: {
+        margin: 0,
+        justifyContent: 'flex-start'
+    },
+    modalView: {  
+        backgroundColor: '#fff',
+        flexDirection: 'row',
+        flexWrap: 'wrap',
+        padding: 10,
+    },
+    modalBtnContainer: {
+        marginVertical: 4,
+        marginHorizontal: 6,
+        width: 70
+    },
+    modalBtn: {
+        height: 30
+    },
+    modalBtnTitle: {
+        fontSize: 13,
+        color: '#777'
     }
 })
