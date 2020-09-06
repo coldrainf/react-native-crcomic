@@ -2,10 +2,9 @@ import React from 'react'
 import { View, StyleSheet, ViewStyle } from 'react-native'
 import { SearchBar, Icon } from 'react-native-elements'
 import { connect } from 'react-redux'
+import { fromJS, is } from 'immutable'
 
-
-interface Props {
-    theme: string,
+interface Props extends BaseProps {
     placeholder?: string
     value?: string,
     onChangeText?: (text: string) => void,
@@ -40,7 +39,7 @@ const CustomSearchBar = (props: Props) => {
     )
 }
 
-export default connect((state: Theme) => ({ theme: state.theme }))(React.memo(CustomSearchBar))
+export default connect((state: BaseProps) => ({ theme: state.theme }))(React.memo(CustomSearchBar, (prevProps: any, nextProps: any) => is(fromJS(prevProps), fromJS(nextProps))))
 
 const styles = StyleSheet.create({
     searchContainer: {

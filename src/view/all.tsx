@@ -1,24 +1,31 @@
-import React, { useState, useEffect } from 'react'
-import { Text, View, StyleSheet, FlatList } from 'react-native'
+import React, { useState, useEffect, useRef } from 'react'
+import { Text, View, StyleSheet, FlatList, RefreshControl,ActivityIndicator } from 'react-native'
 import { connect } from 'react-redux'
-import { Button, Icon, ButtonGroup } from 'react-native-elements'
+import { Button, Icon } from 'react-native-elements'
 import Modal from 'react-native-modal'
+import { fromJS, is } from 'immutable'
 
 import api from '../../config/api'
 import Top from '../component/top'
 import SearchBar from '../component/searchBar'
 import Item from '../component/item'
 
-interface Props {
-    theme: string
+
+interface Filter {
+    origin: number,
+    [propName: string]: number,
+}
+interface FilterText {
+    [propName: string]: string,
 }
 
 const filterIcon = () => <Icon name='caretdown' type='antdesign' color='#fff' size={10} />
 
-const All = (props: Props) => {
+const All = (props: BaseProps) => {
     let [filterData, setFilterData] = useState([[]] as ResData)
-    let [filter, setFilter] = useState([0])
-    let [filterSelect, setFilterSelect] = useState(-1)
+    let [filter, setFilter] = useState({'origin':0} as Filter)
+    let [filterSelect, setFilterSelect] = useState('')
+    let [filterSelectText, setFilterSelectText] = useState({} as FilterText)
     let [filterLoading, setFilterLoading] = useState(true)
 
     useEffect(() => {
@@ -26,81 +33,187 @@ const All = (props: Props) => {
             setFilterLoading(false)
             if(res.code) return
             setFilterData(res.data)
-            setFilter(Array(res.data.length).fill(0))
+            let f: Filter = {'origin':0}
+            let ft: FilterText = {}
+            for(let i in res.data[filter.origin]) {
+                let k = res.data[filter.origin][i].id
+                f[k] = 0
+                ft[k] = res.data[filter.origin][i].name
+            }
+            setFilter(f)
+            setFilterSelectText(ft)
         })
     }, [])
 
+    useEffect(() => {
+        let f: Filter = {'origin':filter.origin}
+        let ft: FilterText = {}
+        for(let i in filterData[filter.origin]) {
+            let k = filterData[filter.origin][i].id
+            if(k != 'origin') f[k] = 0
+            ft[k] = filterData[filter.origin][i].name
+        }
+        setFilter(f)
+        setFilterSelectText(ft)
+        setLast(false)
+    }, [filter.origin])
 
     let [list, setList] = useState([] as ResData)
-    useEffect(() => {
+    let [refreshing, setRefreshing] = useState(true)
+    let [footerRefreshing, setFooterRefreshing] = useState(false)
+    let [page, setPage] = useState(0)
+    let [last, setLast] = useState(false)
+    let listRef = useRef(null)
+    let [lastData, setLastData] = useState([] as ResData)
+    let load = (refresh?: boolean) => {
         if(!filterData[0][0]) return
-        api(`/${(filterData[0][0].data as Array<BaseData>)[filter[0]].id}/all`).then(res => {
-            if(res.code) return
-            setList(res.data)
+        let query = `page=${page+1}`
+        Object.keys(filter).forEach(k => {
+            if(k == 'origin') return
+            let tmp = (filterData[filter.origin] as Array<BaseData>).filter(item => item.id==k)
+            if(!tmp.length) return
+            query += '&' + k + '=' + (tmp[0].data as Array<BaseData>)[filter[k]].id
         })
-    }, [filter])
+        let url = `/${(filterData[0][0].data as Array<BaseData>)[filter.origin].id}/all?${query}`
+        if(refresh) setRefreshing(true)
+        else {
+            if(refreshing || last) return
+            setFooterRefreshing(true)
+        }
+        api(url).then(res => {
+            if(refresh) setRefreshing(false)
+            else setFooterRefreshing(false)  
+            if(res.code) return setPage(page = page==0 ? 0 : page-1)
+            if(!res.data.length || is(fromJS(lastData), fromJS(res.data))) return setLast(true)
+            setLast(false)
+            setLastData(res.data)
+            if(refresh) setList(res.data)
+            else if(!refreshing) {
+                list.push(...res.data)
+                setList(list)
+            }
+        })
+    }
+    let onRefresh = () => {
+        try {
+            (listRef.current as any).scrollToIndex({ index:0, viewPosition: 0 })
+        }catch(err){}
+        setPage(page=0)
+        load(true)
+    }
+    useEffect(onRefresh, [filter])
+
+    let onEndReached = () => {
+        setPage(++page)
+        load()
+    }
+    let setOrder = (index: number) => {
+        setFilter({
+            ...filter,
+            order: index
+        })
+    }
+    let filterSelectFunc = (d: BaseData, index: number) => {
+        setFilter({
+            ...filter,
+            [filterSelect]: index
+        })
+        filterSelectText[filterSelect] = d.name
+        setFilterSelectText(filterSelectText)
+        setFilterSelect('')
+    }
     return (
         <>
-            <Top></Top>
+            <Top />
             <View style={styles.flex}>
-                <SearchBar placeholder='搜索' disabled style={styles.searchBar} />
+                <SearchBar placeholder='搜索' disabled style={styles.searchBar} onTouchEnd={()=>{props.navigation.push('Search')}} />
                 <View style={{ ...styles.filterContainer, backgroundColor: props.theme }}>
                     {
-                        filterData[filter[0]].filter(f => f.id != 'order').map((f, i) =>
+                         filterData[filter.origin].filter(f => f.id != 'order').map((f, i) =>
                             <Button
                                 key={i}
-                                title={f.name}
+                                title={filterSelectText[f.id]}
                                 buttonStyle={{ backgroundColor: props.theme }}
-                                containerStyle={{ ...styles.filterBtnContainer, borderColor: '#fff', borderWidth: filterSelect == i ? 1 : 0 }}
+                                containerStyle={{ ...styles.filterBtnContainer, borderWidth: filterSelect == f.id ? 1 : 0 }}
                                 iconRight={true}
                                 loading={filterLoading}
                                 icon={React.createElement(filterIcon)}
-                                onPress={() => { setFilterSelect(i) }}
+                                onPress={() => { setFilterSelect(f.id) }}
                             />
                         )
                     }
                 </View>
                 <View style={styles.flex}>
+                    <View style={styles.orderContainer}>
+                        {
+                            typeof filter.order != 'undefined' && filterData[filter.origin].filter(item=>item.id=='order')[0].data?.map((item, index)=>
+                                <View style={styles.orderItemContainer} onTouchEnd={()=>setOrder(index)} key={index}>
+                                    <Text style={{...styles.orderItem, color: filter.order==index ? props.theme : '#444'}}>{item.name}</Text>
+                                    <Icon name='sort' type='font-awesome' color={filter.order==index ? props.theme : '#777'} containerStyle={styles.orderItemIcon} size={13} />
+                                </View>
+                            )
+                        }
+                    </View>
                     <FlatList
+                        ref={listRef}
+                        refreshing={true}
                         data={list}
-                        renderItem={Item}
+                        renderItem={props => <Item {...props} />}
                         keyExtractor={(item, k) => k.toString()}
                         horizontal={false}
                         numColumns={3}
+                        showsVerticalScrollIndicator = {false}
                         columnWrapperStyle={styles.itemContainer}
-                    />
-                    {
-                        filterData[filter[0]].filter(f => f.id != 'order').map((f, i) =>
-                            <Modal
-                                isVisible={i == filterSelect}
-                                key={i}
-                                coverScreen={false}
-                                onBackdropPress={() => setFilterSelect(-1)}
-                                animationIn='lightSpeedIn'
-                                animationOut='lightSpeedOut'
-                                animationInTiming={200}
-                                animationOutTiming={10}
-                                backdropTransitionInTiming={0}
-                                backdropTransitionOutTiming={0}
-                                style={styles.modal}
-                            >
-                                <View style={styles.modalView}>
-                                    {
-                                        (filterData[filter[0]][i].data as Array<BaseData>).map((d, index) => (
-                                            <Button
-                                                type='outline'
-                                                title={d.name}
-                                                containerStyle={styles.modalBtnContainer}
-                                                buttonStyle={styles.modalBtn}
-                                                titleStyle={styles.modalBtnTitle}
-                                                onPress={() => {let tmp = [...filter];tmp[i]=index;setFilter(tmp);setFilterSelect(-1) }}
-                                            />
-                                        ))
-                                    }
+                        refreshControl={
+                            <RefreshControl
+                                style={{zIndex:10}}
+                                refreshing={refreshing}
+                                colors={[props.theme]}
+                                progressBackgroundColor={"#fff"}
+                                onRefresh={onRefresh}
+                            />
+                        }
+                        onEndReached={onEndReached}
+                        ListFooterComponent={<>
+                            {
+                                last && <View style={styles.footer}>
+                                    <Text>没有更多啦~</Text>
                                 </View>
-                            </Modal>
-                        )
-                    }
+                            }
+                            {
+                                footerRefreshing && <View style={styles.footer}>
+                                    <ActivityIndicator
+                                        animating={true}
+                                        color={props.theme}
+                                        size="small"
+                                    />
+                                </View>
+                            }
+                        </>}
+                    />
+                    <Modal
+                        isVisible={filterSelect != ''}
+                        coverScreen={false}
+                        onBackdropPress={() => setFilterSelect('')}
+                        animationIn='lightSpeedIn'
+                        animationOut='lightSpeedOut'
+                        animationInTiming={200}
+                        animationOutTiming={10}
+                        backdropTransitionInTiming={0}
+                        backdropTransitionOutTiming={0}
+                        style={styles.modal}
+                    >
+                        <View style={styles.modalContainer}>
+                            {
+                                
+                                filterSelect != '' && (filterData[filter.origin].filter(item=>item.id==filterSelect)[0].data as Array<BaseData>).map((d, index) => (
+                                    <View style={styles.modalView} onTouchEnd={()=>filterSelectFunc(d, index)} key={index}>
+                                        <Text style={{...styles.text, color: filter[filterSelect]== index ? props.theme: '#666'}}>{d.name}</Text>
+                                    </View>
+                                ))
+                            }
+                        </View>
+                    </Modal>
                 </View>
 
             </View>
@@ -108,46 +221,74 @@ const All = (props: Props) => {
     )
 }
 
-export default connect((state: Theme) => ({ theme: state.theme }))(All)
+export default connect((state: BaseProps) => ({ theme: state.theme }))(All)
 
 const styles = StyleSheet.create({
     flex: {
         flex: 1,
+    },
+    text: {
+        textAlign: 'center'
     },
     searchBar: {
         paddingHorizontal: 40
     },
     filterContainer: {
         height: 40,
-        flexDirection: 'row'
+        flexDirection: 'row',
+        zIndex: 100
     },
     filterBtnContainer: {
         flex: 1,
-        height: 40
+        height: 40, 
+        borderColor: '#fff'
+    },
+    orderContainer: {
+        flexDirection: 'row',
+        justifyContent: 'flex-end',
+        borderBottomColor: '#eee',
+        borderBottomWidth: 1
+    },
+    orderItemContainer: {
+        width: 50,
+        height: 30,
+        justifyContent: 'center',
+        alignItems: 'center',
+        flexDirection: 'row',
+    },
+    orderItem: {
+        textAlign: 'center',
+        fontSize: 15
+    },
+    orderItemIcon: {
+        flex: 1,
+        justifyContent: 'center'
     },
     itemContainer: {
-        justifyContent: 'space-evenly'
+        justifyContent: 'space-between',
+        paddingHorizontal: 10
     },
     modal: {
         margin: 0,
         justifyContent: 'flex-start'
     },
-    modalView: {  
+    modalView: {
+        height: 30,
+        width: 60,
+        justifyContent: 'center'
+    },
+    modalContainer: { 
         backgroundColor: '#fff',
         flexDirection: 'row',
         flexWrap: 'wrap',
-        padding: 10,
+        paddingHorizontal: 10,
+        paddingVertical: 4
     },
-    modalBtnContainer: {
-        marginVertical: 4,
-        marginHorizontal: 6,
-        width: 70
+    footer:{
+        flexDirection:'row',
+        height:24,
+        justifyContent:'center',
+        alignItems:'center',
+        marginBottom:10,
     },
-    modalBtn: {
-        height: 30
-    },
-    modalBtnTitle: {
-        fontSize: 13,
-        color: '#777'
-    }
 })

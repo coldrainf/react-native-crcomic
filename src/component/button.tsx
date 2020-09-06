@@ -1,5 +1,6 @@
 import React from 'react'
 import { TouchableNativeFeedback, TouchableOpacity, Platform, TouchableNativeFeedbackProps, TouchableOpacityProps } from 'react-native'
+import { fromJS, is } from 'immutable'
 
 interface TouchableNativeFeedbackProps0 extends TouchableNativeFeedbackProps {
     children?: any,
@@ -25,4 +26,5 @@ const ButtonIos = (props: TouchableOpacityProps0) => (<TouchableOpacity {...prop
     {props.children}
 </TouchableOpacity>)
 
-export default Platform.OS == 'ios' ? ButtonIos : ButtonAndroid
+const Button = Platform.OS == 'ios' ? ButtonIos : ButtonAndroid
+export default React.memo(Button, (prevProps: any, nextProps: any) => is(fromJS(prevProps), fromJS(nextProps)))

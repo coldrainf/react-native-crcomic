@@ -1,4 +1,4 @@
-import React,{Component} from 'react'
+import React,{PureComponent} from 'react'
 import {StyleSheet,
     Text,
     View,
@@ -7,7 +7,7 @@ import {StyleSheet,
 
 import Button from './button'
 
-export default class TabBar extends Component<any> {
+export default class TabBar extends PureComponent<any> {
     constructor(props: any) {
         super(props);
         this.state = {

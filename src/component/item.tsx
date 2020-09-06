@@ -1,18 +1,19 @@
-import React from 'react'
-import { View, Text,ActivityIndicator, StyleSheet,UIManager,findNodeHandle } from 'react-native'
+import React, { Props } from 'react'
+import { View, Text,ActivityIndicator, StyleSheet} from 'react-native'
 import { Image } from 'react-native-elements'
 import LinearGradient from 'react-native-linear-gradient'
+import { fromJS, is } from 'immutable'
 
 import Button from '../component/button'
 
 const Item = (props: any) => {
-    let index = props.index,
-        item = props.item
+    let index = props.index
+    let item = props.item
 
-    return (<View style={styles.container} >
+    return (<View style={[styles.container, props.style]} >
         <Image
             source={{ 
-                uri: item.cover, 
+                uri: item.cover,
                 headers: { Referer: item.cover } 
             }} 
             style={styles.image}
@@ -30,12 +31,12 @@ const Item = (props: any) => {
         <Text style={styles.lastChapter}>更新至：{item.lastChapterName}</Text>
     </View>)
 }
-export default Item
+export default React.memo(Item, (prevProps: any, nextProps: any) => is(fromJS(prevProps), fromJS(nextProps)))
 
 const styles = StyleSheet.create({
     container: {
         width: 111,
-        marginVertical: 10,
+        marginVertical: 10
     },
     imageContainer: {
         borderRadius: 4,
@@ -46,7 +47,7 @@ const styles = StyleSheet.create({
         height: 148,
     },
     placeholderStyle: {
-        backgroundColor: '#eee'
+        backgroundColor: '#ccc'
     },
     btn: {
         zIndex: 100,
@@ -57,11 +58,11 @@ const styles = StyleSheet.create({
         height: 148
     },
     name: {
-        fontSize: 13
+        fontSize: 13,
     },
     lastChapter: {
-        fontSize: 12,
-        color: '#777'
+        fontSize: 11,
+        color: '#444'
     },
     origin: {
         position: 'absolute',

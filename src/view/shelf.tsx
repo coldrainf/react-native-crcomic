@@ -9,10 +9,10 @@ import History from '../component/history'
 import Top from '../component/top'
 
 
-const Shelf = (props: Theme) => {
+const Shelf = (props: BaseProps) => {
   return (
     <>
-      <Top></Top>
+      <Top />
       <TabView renderTabBar={props1 => (
         <View style={{backgroundColor: props.theme}}>
           <TabBar {...props1} tabUnderlineDefaultWidth={20} activeColor={"#fff"} inactiveColor={"#eee"} style={{ ...styles.tabBar, backgroundColor: props.theme }} />
@@ -33,4 +33,4 @@ const styles = StyleSheet.create({
   }
 })
 
-export default connect((state: Theme) => ({ theme: state.theme }))(Shelf)
+export default connect((state: BaseProps) => ({ theme: state.theme }))(Shelf)

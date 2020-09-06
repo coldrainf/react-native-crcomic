@@ -1,16 +1,19 @@
 import React from 'react'
-import { Text, View } from 'react-native'
+import { Text, View, StatusBar } from 'react-native'
+import { connect } from 'react-redux'
 
 import Top from '../component/top'
 
-export default () => {
+const Search = (props: BaseProps) => {
 
     return (
         <>
-        <Top></Top>
-        <View style={{ backgroundColor: 'red',flex:1 }}>
+        <Top />
+        <View style={{ backgroundColor: props.theme,flex:1 }}>
             <Text>这里是all</Text>
         </View>
         </>
     )
 }
+
+export default connect((state: BaseProps) => ({ theme: state.theme }))(Search)

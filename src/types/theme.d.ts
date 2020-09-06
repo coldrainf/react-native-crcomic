@@ -1,3 +1,0 @@
-interface Theme {
-    theme: string
-}
