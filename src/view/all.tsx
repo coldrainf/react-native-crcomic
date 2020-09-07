@@ -61,7 +61,7 @@ const All = (props: BaseProps) => {
     let [list, setList] = useState([] as ResData)
     let [refreshing, setRefreshing] = useState(true)
     let [footerRefreshing, setFooterRefreshing] = useState(false)
-    let [page, setPage] = useState(0)
+    let [page, setPage] = useState(1)
     let [last, setLast] = useState(false)
     let listRef = useRef(null)
     let [lastData, setLastData] = useState([] as ResData)
@@ -74,17 +74,20 @@ const All = (props: BaseProps) => {
             if(!tmp.length) return
             query += '&' + k + '=' + (tmp[0].data as Array<BaseData>)[filter[k]].id
         })
-        let url = `/${(filterData[0][0].data as Array<BaseData>)[filter.origin].id}/all?${query}`
         if(refresh) setRefreshing(true)
         else {
             if(refreshing || last) return
             setFooterRefreshing(true)
         }
+        let url = `/${(filterData[0][0].data as Array<BaseData>)[filter.origin].id}/all?${query}`
         api(url).then(res => {
             if(refresh) setRefreshing(false)
             else setFooterRefreshing(false)  
-            if(res.code) return setPage(page = page==0 ? 0 : page-1)
-            if(!res.data.length || is(fromJS(lastData), fromJS(res.data))) return setLast(true)
+            if(res.code) return setPage(page = page==1 ? 1 : page-1)
+            if(!res.data.length || is(fromJS(lastData), fromJS(res.data))) {
+                if(refresh) setList([])
+                return setLast(true)
+            }
             setLast(false)
             setLastData(res.data)
             if(refresh) setList(res.data)
@@ -98,7 +101,7 @@ const All = (props: BaseProps) => {
         try {
             (listRef.current as any).scrollToIndex({ index:0, viewPosition: 0 })
         }catch(err){}
-        setPage(page=0)
+        setPage(page=1)
         load(true)
     }
     useEffect(onRefresh, [filter])

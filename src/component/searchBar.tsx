@@ -1,4 +1,4 @@
-import React from 'react'
+import React, { useLayoutEffect, useRef } from 'react'
 import { View, StyleSheet, ViewStyle } from 'react-native'
 import { SearchBar, Icon } from 'react-native-elements'
 import { connect } from 'react-redux'
@@ -8,24 +8,32 @@ interface Props extends BaseProps {
     placeholder?: string
     value?: string,
     onChangeText?: (text: string) => void,
+    onSubmit?: () => void
     style?: ViewStyle,
+    searchInputContainer?: ViewStyle,
     disabled?: boolean,
+    showLoading?: boolean,
     onTouchEnd?: ()=> void
 }
 
-
-const SearchIcon = () => (
-    <Icon name='search' type='evilIcons' color='#fff' />
-)
-
 const CustomSearchBar = (props: Props) => {
+    const SearchIcon = () => <Icon name='search' type='evilIcons' color={props.disabled ? '#fff': '#aaa'} />
+    let searchRef = useRef(null as any)
+    useLayoutEffect(()=>{
+        if(!props.disabled) {
+            setTimeout(() => {
+                searchRef.current.focus()
+            }, 0);
+        }
+    },[])
     return (
         <View pointerEvents={props.disabled ? 'auto': 'box-none'} onTouchEnd={props.onTouchEnd} style={{ backgroundColor: props.theme, ...props.style }}>
             <SearchBar
-                selectionColor={'#fff'}
+                ref={searchRef}
+                selectionColor='#aaa'
                 containerStyle={{ ...styles.searchContainer, backgroundColor: props.theme }}
-                inputContainerStyle={{ ...styles.searchInputContainer }}
-                inputStyle={styles.search}
+                inputContainerStyle={[styles.searchInputContainer, props.searchInputContainer]}
+                inputStyle={[styles.search, {color: props.disabled ? '#fff' : '#000' }]}
                 placeholderTextColor='#fff'
                 round={true}
                 searchIcon={React.createElement(SearchIcon)}
@@ -33,6 +41,9 @@ const CustomSearchBar = (props: Props) => {
                 placeholder={props.placeholder}
                 onChangeText={props.onChangeText}
                 disabled={props.disabled}
+                onSubmitEditing={props.onSubmit}
+                showLoading={props.showLoading}
+                loadingProps={{color:props.theme}}
             />
         </View>
 
@@ -51,7 +62,6 @@ const styles = StyleSheet.create({
         height: 36,
     },
     search: {
-        color: '#fff',
         fontSize: 15,
     },
 })

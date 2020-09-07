@@ -1,9 +1,9 @@
 import 'react-native-gesture-handler'
-import React from 'react'
-import { Text, View } from 'react-native'
+import React, {useEffect} from 'react'
+import { Text, View, BackHandler,ToastAndroid } from 'react-native'
 import { Icon } from 'react-native-elements'
 import { Provider, connect } from 'react-redux'
-import { NavigationContainer, StackActions,TabActions } from '@react-navigation/native'
+import { NavigationContainer, StackActions, CommonActions } from '@react-navigation/native'
 import { createStackNavigator, TransitionPresets } from '@react-navigation/stack'
 import { createBottomTabNavigator } from '@react-navigation/bottom-tabs'
 // import { enableScreens } from 'react-native-screens'
@@ -50,12 +50,40 @@ const CustomTabBar = (props: any) => {
 }
 const ThemeTabBar = connect((state: BaseProps) => ({ theme: state.theme }))(CustomTabBar)
 
-const Root = () => (
-  <Tab.Navigator tabBar={props => <ThemeTabBar {...props} />} initialRouteName='All'  >
-    <Tab.Screen name="Shelf" component={Shelf} />
-    <Tab.Screen name="All" component={All} />
-  </Tab.Navigator>
-)
+const Root = (props: BaseProps) => {
+  let lastBackPressed = 0
+  let  onBackButtonPress = () => {
+    if (props.navigation.isFocused()) {
+      if (lastBackPressed && lastBackPressed + 2000 >= Date.now()) {
+        if(props.route.state) {
+          props.navigation.dispatch(
+            CommonActions.reset({
+              index: 1,
+              routes: [
+                props.route.state.routes.pop(),
+              ],
+            })
+          );
+        }
+        return false; 
+      } 
+    lastBackPressed = Date.now();
+       
+    ToastAndroid.show('再按一次退出应用', ToastAndroid.SHORT); 
+    return true; 
+  }
+}
+useEffect(() => {
+  let backHandler = BackHandler.addEventListener('hardwareBackPress',onBackButtonPress);
+  return () => backHandler.remove()
+})
+  return (
+    <Tab.Navigator tabBar={props => <ThemeTabBar {...props} />} initialRouteName='All'  >
+      <Tab.Screen name="Shelf" component={Shelf} />
+      <Tab.Screen name="All" component={All} />
+    </Tab.Navigator>
+  )
+}
 
 export default () => {
   return (
@@ -68,7 +96,7 @@ export default () => {
             ...TransitionPresets.SlideFromRightIOS,
           }}
         >
-          <Stack.Screen name="Root" component={Root} />
+          <Stack.Screen name="Root" component={Root} options={{animationEnabled:false}} />
           <Stack.Screen name="Search" component={Search} />
         </Stack.Navigator>
       </NavigationContainer>
