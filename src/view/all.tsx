@@ -8,7 +8,7 @@ import { fromJS, is } from 'immutable'
 import api from '../../config/api'
 import Top from '../component/top'
 import SearchBar from '../component/searchBar'
-import Item from '../component/item'
+import Item from '../component/listItem'
 
 
 interface Filter {
@@ -161,12 +161,11 @@ const All = (props: BaseProps) => {
                         ref={listRef}
                         refreshing={true}
                         data={list}
-                        renderItem={props => <Item {...props} />}
+                        renderItem={itemProps => <Item {...itemProps} navigation={props.navigation} />}
                         keyExtractor={(item, k) => k.toString()}
                         horizontal={false}
                         numColumns={3}
                         showsVerticalScrollIndicator = {false}
-                        columnWrapperStyle={styles.itemContainer}
                         refreshControl={
                             <RefreshControl
                                 style={{zIndex:10}}
@@ -266,10 +265,6 @@ const styles = StyleSheet.create({
     orderItemIcon: {
         flex: 1,
         justifyContent: 'center'
-    },
-    itemContainer: {
-        justifyContent: 'space-between',
-        paddingHorizontal: 10
     },
     modal: {
         margin: 0,

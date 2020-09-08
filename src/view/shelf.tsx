@@ -3,7 +3,7 @@ import { View, StyleSheet } from 'react-native'
 import TabView from 'react-native-scrollable-tab-view'
 import { connect } from 'react-redux'
 
-import TabBar from '../component/tab'
+import TabBar from '../component/tabBar'
 import Collection from '../component/collection'
 import History from '../component/history'
 import Top from '../component/top'

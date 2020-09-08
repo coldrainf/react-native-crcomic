@@ -15,7 +15,7 @@ import Shelf from './view/shelf'
 import Search from './view/search'
 import All from './view/all'
 import Button from './component/button'
-import Top from './component/top'
+import Item from './view/item'
 
 const Stack = createStackNavigator()
 const Tab = createBottomTabNavigator()
@@ -85,21 +85,37 @@ useEffect(() => {
   )
 }
 
+const Router = (props: BaseProps) => (
+  <NavigationContainer>
+    <Stack.Navigator
+      initialRouteName="Root"
+      screenOptions={{
+        headerShown: false,
+        headerTitleAlign: 'center',
+        headerTitle:'', 
+        headerStyle:{
+          backgroundColor: props.theme
+        }, 
+        headerTintColor:'#fff',
+        headerTitleStyle: {
+          fontSize: 18
+        },
+        ...TransitionPresets.SlideFromRightIOS,
+      }}
+    >
+      <Stack.Screen name="Root" component={Root} options={{animationEnabled:false}} />
+      <Stack.Screen name="Search" component={Search} />
+      <Stack.Screen name="Item" component={Item} options={({ route }) => ({ headerShown:true,headerTitle: (route.params as any)?.name })} />
+    </Stack.Navigator>
+  </NavigationContainer>
+)
+const ThemeRouter = connect((state: BaseProps) => ({ theme: state.theme }))(Router)
+
+
 export default () => {
   return (
     <Provider store={store}>
-      <NavigationContainer>
-        <Stack.Navigator
-          initialRouteName="Root"
-          screenOptions={{
-            headerShown: false,
-            ...TransitionPresets.SlideFromRightIOS,
-          }}
-        >
-          <Stack.Screen name="Root" component={Root} options={{animationEnabled:false}} />
-          <Stack.Screen name="Search" component={Search} />
-        </Stack.Navigator>
-      </NavigationContainer>
+      <ThemeRouter />
     </Provider>
   )
 }

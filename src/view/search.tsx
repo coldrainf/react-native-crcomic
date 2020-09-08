@@ -1,25 +1,27 @@
 import React, { useState, useEffect, useRef } from 'react'
-import { Text, View, StyleSheet, FlatList, ActivityIndicator } from 'react-native'
+import { Text, View, StyleSheet, FlatList, ActivityIndicator, Keyboard } from 'react-native'
+import { Icon } from 'react-native-elements'
 import { connect } from 'react-redux'
 import { fromJS, is } from 'immutable'
 
 import Top from '../component/top'
 import SearchBar from '../component/searchBar'
 import api from '../../config/api'
-import Item from '../component/item'
+import Item from '../component/listItem'
+import Button from '../component/button'
 import storage from '../storage'
 
 const Search = (props: BaseProps) => {
     let [kw, setKw] = useState('')
     let [showHistory, setShowHistory] = useState(true)
     let [searchHistory, setSearchHistory] = useState([] as Array<string>)
-
+    let [historyDel, setHistoryDel] = useState(Array(10).fill(false))
     useEffect(() => {
         if (kw == '') setShowHistory(true)
     }, [kw])
     useEffect(() => {
-        storage.load({key: 'searchHistory'}).then(res => setSearchHistory(res))
-    },[])
+        storage.load({ key: 'searchHistory' }).then(res => setSearchHistory(res))
+    }, [])
 
     let [list, setList] = useState([] as ResData)
     let [refreshing, setRefreshing] = useState(false)
@@ -42,7 +44,7 @@ const Search = (props: BaseProps) => {
             if (refresh) setRefreshing(false)
             else setFooterRefreshing(false)
             if (res.code) return setPage(page = page == 1 ? 1 : page - 1)
-            if (!res.data.length || is(fromJS(lastData), fromJS(res.data))) return setLast(true)
+            if (!res.data.length || (!refresh && is(fromJS(lastData), fromJS(res.data)))) return setLast(true)
             setLast(false)
             setLastData(res.data)
             if (refresh) setList(res.data)
@@ -57,17 +59,21 @@ const Search = (props: BaseProps) => {
         load()
     }
 
-    let onSubmit = () => {
-        if (kw == '') return
-
-        setShowHistory(false)
-        let tmp = [...new Set([kw, ...searchHistory])].slice(0, 7)
+    let resetSearchHistory = (tmp: Array<string>) => {
+        tmp = tmp.slice(0, 9)
         setSearchHistory(tmp)
         storage.save({
             key: 'searchHistory',
             data: tmp
         })
-
+    }
+    let onSubmit = () => {
+        if (kw == '') return
+        Keyboard.dismiss()
+        setShowHistory(false)
+        let tmp = [...new Set([kw, ...searchHistory])]
+        resetSearchHistory(tmp)
+        setHistoryDel(Array(10).fill(false))
         try {
             (listRef.current as any).scrollToIndex({ index: 0, viewPosition: 0 })
         } catch (err) { }
@@ -75,47 +81,82 @@ const Search = (props: BaseProps) => {
         load(true)
     }
 
-    let jumpHistory = (h: string) => {
-        setKw(kw=h)
-        onSubmit()
+    let [delStatus, setDelStatus] = useState(false)
+    let jumpHistory = (h: string, i: number) => {
+        setTimeout(() => {
+            if (delStatus) return setDelStatus(delStatus = false)
+            setKw(kw = h)
+            onSubmit()
+        }, 0);
     }
-
-
+    let showHistoryDel = (i: number) => {
+        let tmp = [...historyDel]
+        tmp[i] = true
+        setHistoryDel(tmp)
+    }
+    let delHistory = (i: number) => {
+        setDelStatus(delStatus = true)
+        let tmp = [...searchHistory]
+        tmp.splice(i, 1)
+        let tmp2 = [...historyDel]
+        tmp2.splice(i, 1)
+        resetSearchHistory(tmp)
+        setHistoryDel(tmp2)
+    }
+    let clearHistory = () => {
+        resetSearchHistory([])
+        setHistoryDel(historyDel = Array(10).fill(false))
+    }
     return (
         <>
             <Top />
             <View style={styles.flex}>
                 <View style={styles.flexRow}>
-                    <SearchBar value={kw} onChangeText={setKw} onSubmit={onSubmit} showLoading={refreshing} style={styles.searchBar} searchInputContainer={styles.searchBarContainer} />
+                    <SearchBar value={kw} onChangeText={k => setKw(k.slice(0, 23))} onSubmit={onSubmit} showLoading={refreshing} style={styles.searchBar} searchInputContainer={styles.searchBarContainer} />
                     <View style={[styles.cancelContainer, { backgroundColor: props.theme }]} onTouchEnd={() => props.navigation.goBack()}>
                         <Text style={styles.cancelText}>取消</Text>
                     </View>
                 </View>
                 <View style={styles.flex}>
                     {
-                        showHistory && <View style={styles.historyContainer}>
+                        showHistory && <View style={styles.historyOuterContainer}>
                             <Text>搜索历史</Text>
-                            <View>
+                            <View style={styles.historyContainer}>
                                 {
                                     searchHistory.map((h, i) => (
-                                        <View onTouchEnd={()=>jumpHistory(h)} key={i} style={styles.historyItemContainer}>
-                                            <Text style={styles.historyItem}>{h}</Text>
-                                        </View>
+                                        <Button onPress={() => jumpHistory(h, i)} onLongPress={() => showHistoryDel(i)} key={i}>
+                                            <View key={i} style={styles.historyItemContainer}>
+                                                <Text style={styles.historyItem}>{h}</Text>
+                                                {
+                                                    historyDel[i] && <View style={styles.historyDelContainer} onTouchEnd={() => { delHistory(i) }}>
+                                                        <Text style={styles.historyDel}>X</Text>
+                                                    </View>
+                                                }
+                                            </View>
+                                        </Button>
+
                                     ))
                                 }
                             </View>
+                            {
+                                searchHistory.length > 0 && <View style={styles.clearOuterContainer}>
+                                    <View style={styles.clearContainer} onTouchEnd={clearHistory}>
+                                        <Icon name='delete' type='antdesign' color='#444' size={14} />
+                                        <Text style={styles.clear}>清空搜索历史</Text>
+                                    </View>
+                                </View>
+                            }
                         </View>
                     }
                     {
-                        !showHistory && <View>
+                        (!showHistory && !refreshing) && <View>
                             <FlatList
                                 data={list}
-                                renderItem={props => <Item {...props} />}
+                                renderItem={itemProps => <Item {...itemProps} navigation={props.navigation} />}
                                 keyExtractor={(item, k) => k.toString()}
                                 horizontal={false}
                                 numColumns={3}
                                 showsVerticalScrollIndicator={false}
-                                columnWrapperStyle={styles.itemContainer}
                                 onEndReached={onEndReached}
                                 ListFooterComponent={<>
                                     {
@@ -168,25 +209,55 @@ const styles = StyleSheet.create({
         fontSize: 15,
         marginLeft: 6
     },
-    historyContainer: {
+    historyOuterContainer: {
         padding: 10,
+    },
+    historyContainer: {
         flexDirection: 'row',
         flexWrap: 'wrap'
     },
     historyItemContainer: {
         height: 30,
         margin: 6,
-        paddingHorizontal: 6,
+        paddingHorizontal: 14,
         backgroundColor: '#ddd',
-        borderRadius: 5
+        borderRadius: 5,
+        position: 'relative'
     },
     historyItem: {
         lineHeight: 30,
         textAlign: 'center'
     },
-    itemContainer: {
-        justifyContent: 'space-between',
-        paddingHorizontal: 10
+    historyDelContainer: {
+        position: 'absolute',
+        right: 0,
+        top: 0,
+        backgroundColor: '#bbb',
+        width: 16,
+        height: 16,
+        borderRadius: 8,
+        justifyContent: 'center'
+    },
+    historyDel: {
+        textAlign: 'center',
+        color: '#333',
+        fontSize: 10
+    },
+    clearOuterContainer: {
+        marginTop: 20,
+        alignItems: 'center'
+    },
+    clearContainer: {
+        flexDirection: 'row',
+        justifyContent: 'center',
+        alignItems: 'center',
+        width: 130,
+        paddingVertical: 4
+    },
+    clear: {
+        fontSize: 14,
+        marginLeft: 6,
+        color: '#666'
     },
     footer: {
         flexDirection: 'row',
