@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useRef } from 'react'
-import { Text, View, StyleSheet, FlatList, ActivityIndicator, Keyboard } from 'react-native'
+import { Text, View, StyleSheet, FlatList, ActivityIndicator, Keyboard, Pressable } from 'react-native'
 import { Icon } from 'react-native-elements'
 import { connect } from 'react-redux'
 import { fromJS, is } from 'immutable'
@@ -23,13 +23,13 @@ const Search = (props: BaseProps) => {
         storage.load({ key: 'searchHistory' }).then(res => setSearchHistory(res))
     }, [])
 
-    let [list, setList] = useState([] as ResData)
+    let [list, setList] = useState([] as ListData)
     let [refreshing, setRefreshing] = useState(false)
     let [footerRefreshing, setFooterRefreshing] = useState(false)
     let [page, setPage] = useState(1)
     let [last, setLast] = useState(false)
     let listRef = useRef(null)
-    let [lastData, setLastData] = useState([] as ResData)
+    let [lastData, setLastData] = useState([] as ListData)
     let load = (refresh?: boolean) => {
         if (kw == '') return
         if (refresh) setRefreshing(true)
@@ -40,7 +40,7 @@ const Search = (props: BaseProps) => {
         let url = `/all/search?kw=${kw}&page=${page}`
         console.log(url)
         if (refresh) setList([])
-        api(url).then(res => {
+        api(url).then((res: ListRes) => {
             if (refresh) setRefreshing(false)
             else setFooterRefreshing(false)
             if (res.code) return setPage(page = page == 1 ? 1 : page - 1)
@@ -81,13 +81,9 @@ const Search = (props: BaseProps) => {
         load(true)
     }
 
-    let [delStatus, setDelStatus] = useState(false)
     let jumpHistory = (h: string, i: number) => {
-        setTimeout(() => {
-            if (delStatus) return setDelStatus(delStatus = false)
-            setKw(kw = h)
-            onSubmit()
-        }, 0);
+        setKw(kw = h)
+        onSubmit()
     }
     let showHistoryDel = (i: number) => {
         let tmp = [...historyDel]
@@ -95,7 +91,6 @@ const Search = (props: BaseProps) => {
         setHistoryDel(tmp)
     }
     let delHistory = (i: number) => {
-        setDelStatus(delStatus = true)
         let tmp = [...searchHistory]
         tmp.splice(i, 1)
         let tmp2 = [...historyDel]
@@ -107,15 +102,21 @@ const Search = (props: BaseProps) => {
         resetSearchHistory([])
         setHistoryDel(historyDel = Array(10).fill(false))
     }
+
+    const RenderItem = (itemProps: any) => <Item {...itemProps} navigation={props.navigation} />
+
     return (
         <>
             <Top />
             <View style={styles.flex}>
                 <View style={styles.flexRow}>
                     <SearchBar value={kw} onChangeText={k => setKw(k.slice(0, 23))} onSubmit={onSubmit} showLoading={refreshing} style={styles.searchBar} searchInputContainer={styles.searchBarContainer} />
-                    <View style={[styles.cancelContainer, { backgroundColor: props.theme }]} onTouchEnd={() => props.navigation.goBack()}>
-                        <Text style={styles.cancelText}>取消</Text>
-                    </View>
+                    <Pressable onPress={() => props.navigation.goBack()} style={{backgroundColor: props.theme}}>
+                        <View style={[styles.cancelContainer, { backgroundColor: props.theme }]} >
+                            <Text style={styles.cancelText}>取消</Text>
+                        </View>
+                    </Pressable>
+
                 </View>
                 <View style={styles.flex}>
                     {
@@ -124,13 +125,14 @@ const Search = (props: BaseProps) => {
                             <View style={styles.historyContainer}>
                                 {
                                     searchHistory.map((h, i) => (
-                                        <Button onPress={() => jumpHistory(h, i)} onLongPress={() => showHistoryDel(i)} key={i}>
+                                        <Button onPress={() => jumpHistory(h, i)} onLongPress={() => showHistoryDel(i)} key={i} hitSlop={{top: 2, bottom: 2, left: 2, right: 2}}>
                                             <View key={i} style={styles.historyItemContainer}>
                                                 <Text style={styles.historyItem}>{h}</Text>
                                                 {
-                                                    historyDel[i] && <View style={styles.historyDelContainer} onTouchEnd={() => { delHistory(i) }}>
-                                                        <Text style={styles.historyDel}>X</Text>
-                                                    </View>
+                                                    historyDel[i] && <Pressable onPress={() => { delHistory(i) }} style={styles.historyDelContainer} hitSlop={{top: 4, bottom: 6, left: 4, right: 4}}>
+                                                            <Text style={styles.historyDel}>X</Text>
+                                                    </Pressable>
+
                                                 }
                                             </View>
                                         </Button>
@@ -140,10 +142,13 @@ const Search = (props: BaseProps) => {
                             </View>
                             {
                                 searchHistory.length > 0 && <View style={styles.clearOuterContainer}>
-                                    <View style={styles.clearContainer} onTouchEnd={clearHistory}>
-                                        <Icon name='delete' type='antdesign' color='#444' size={14} />
-                                        <Text style={styles.clear}>清空搜索历史</Text>
-                                    </View>
+                                    <Pressable onPress={clearHistory}>
+                                        <View style={styles.clearContainer} >
+                                            <Icon name='delete' type='antdesign' color='#444' size={14} />
+                                            <Text style={styles.clear}>清空搜索历史</Text>
+                                        </View>
+                                    </Pressable>
+
                                 </View>
                             }
                         </View>
@@ -152,7 +157,7 @@ const Search = (props: BaseProps) => {
                         (!showHistory && !refreshing) && <View>
                             <FlatList
                                 data={list}
-                                renderItem={itemProps => <Item {...itemProps} navigation={props.navigation} />}
+                                renderItem={RenderItem}
                                 keyExtractor={(item, k) => k.toString()}
                                 horizontal={false}
                                 numColumns={3}
@@ -200,13 +205,11 @@ const styles = StyleSheet.create({
     },
     cancelContainer: {
         width: 50,
-        flexDirection: 'column',
     },
     cancelText: {
-        flex: 1,
         lineHeight: 50,
         color: '#fff',
-        fontSize: 15,
+        fontSize: 16,
         marginLeft: 6
     },
     historyOuterContainer: {
@@ -233,9 +236,9 @@ const styles = StyleSheet.create({
         right: 0,
         top: 0,
         backgroundColor: '#bbb',
-        width: 16,
-        height: 16,
-        borderRadius: 8,
+        width: 14,
+        height: 14,
+        borderRadius: 7,
         justifyContent: 'center'
     },
     historyDel: {

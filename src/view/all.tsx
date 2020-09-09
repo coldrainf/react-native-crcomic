@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useRef } from 'react'
-import { Text, View, StyleSheet, FlatList, RefreshControl,ActivityIndicator } from 'react-native'
+import { Text, View, StyleSheet, FlatList, RefreshControl,ActivityIndicator, Pressable } from 'react-native'
 import { connect } from 'react-redux'
 import { Button, Icon } from 'react-native-elements'
 import Modal from 'react-native-modal'
@@ -22,14 +22,14 @@ interface FilterText {
 const filterIcon = () => <Icon name='caretdown' type='antdesign' color='#fff' size={10} />
 
 const All = (props: BaseProps) => {
-    let [filterData, setFilterData] = useState([[]] as ResData)
+    let [filterData, setFilterData] = useState([[]] as ListData)
     let [filter, setFilter] = useState({'origin':0} as Filter)
     let [filterSelect, setFilterSelect] = useState('')
     let [filterSelectText, setFilterSelectText] = useState({} as FilterText)
     let [filterLoading, setFilterLoading] = useState(true)
 
     useEffect(() => {
-        api('/all/filter').then(res => {
+        api('/all/filter').then((res: ListRes) => {
             setFilterLoading(false)
             if(res.code) return
             setFilterData(res.data)
@@ -58,13 +58,13 @@ const All = (props: BaseProps) => {
         setLast(false)
     }, [filter.origin])
 
-    let [list, setList] = useState([] as ResData)
+    let [list, setList] = useState([] as ListData)
     let [refreshing, setRefreshing] = useState(true)
     let [footerRefreshing, setFooterRefreshing] = useState(false)
     let [page, setPage] = useState(1)
     let [last, setLast] = useState(false)
     let listRef = useRef(null)
-    let [lastData, setLastData] = useState([] as ResData)
+    let [lastData, setLastData] = useState([] as ListData)
     let load = (refresh?: boolean) => {
         if(!filterData[0][0]) return
         let query = `page=${page+1}`
@@ -84,7 +84,7 @@ const All = (props: BaseProps) => {
             if(refresh) setRefreshing(false)
             else setFooterRefreshing(false)  
             if(res.code) return setPage(page = page==1 ? 1 : page-1)
-            if(!res.data.length || is(fromJS(lastData), fromJS(res.data))) {
+            if (!res.data.length || (!refresh && is(fromJS(lastData), fromJS(res.data)))) {
                 if(refresh) setList([])
                 return setLast(true)
             }
@@ -125,11 +125,14 @@ const All = (props: BaseProps) => {
         setFilterSelectText(filterSelectText)
         setFilterSelect('')
     }
+
+    const RenderItem = (itemProps: any) => <Item {...itemProps} navigation={props.navigation} />
+
     return (
         <>
             <Top />
             <View style={styles.flex}>
-                <SearchBar placeholder='搜索' disabled style={styles.searchBar} onTouchEnd={()=>{props.navigation.push('Search')}} />
+                <SearchBar placeholder='搜索' disabled style={styles.searchBar} onPress={()=>{props.navigation.push('Search')}} />
                 <View style={{ ...styles.filterContainer, backgroundColor: props.theme }}>
                     {
                          filterData[filter.origin].filter(f => f.id != 'order').map((f, i) =>
@@ -150,10 +153,13 @@ const All = (props: BaseProps) => {
                     <View style={styles.orderContainer}>
                         {
                             typeof filter.order != 'undefined' && filterData[filter.origin].filter(item=>item.id=='order')[0].data?.map((item, index)=>
-                                <View style={styles.orderItemContainer} onTouchEnd={()=>setOrder(index)} key={index}>
-                                    <Text style={{...styles.orderItem, color: filter.order==index ? props.theme : '#444'}}>{item.name}</Text>
-                                    <Icon name='sort' type='font-awesome' color={filter.order==index ? props.theme : '#777'} containerStyle={styles.orderItemIcon} size={13} />
-                                </View>
+                                <Pressable onPress={()=>setOrder(index)} key={index}>
+                                    <View style={styles.orderItemContainer}>
+                                        <Text style={{...styles.orderItem, color: filter.order==index ? props.theme : '#444'}}>{item.name}</Text>
+                                        <Icon name='sort' type='font-awesome' color={filter.order==index ? props.theme : '#777'} containerStyle={styles.orderItemIcon} size={13} />
+                                    </View>
+                                </Pressable>
+
                             )
                         }
                     </View>
@@ -161,7 +167,7 @@ const All = (props: BaseProps) => {
                         ref={listRef}
                         refreshing={true}
                         data={list}
-                        renderItem={itemProps => <Item {...itemProps} navigation={props.navigation} />}
+                        renderItem={RenderItem}
                         keyExtractor={(item, k) => k.toString()}
                         horizontal={false}
                         numColumns={3}
@@ -209,9 +215,12 @@ const All = (props: BaseProps) => {
                             {
                                 
                                 filterSelect != '' && (filterData[filter.origin].filter(item=>item.id==filterSelect)[0].data as Array<BaseData>).map((d, index) => (
-                                    <View style={styles.modalView} onTouchEnd={()=>filterSelectFunc(d, index)} key={index}>
-                                        <Text style={{...styles.text, color: filter[filterSelect]== index ? props.theme: '#666'}}>{d.name}</Text>
-                                    </View>
+                                    <Pressable onPress={()=>filterSelectFunc(d, index)} key={index}>
+                                        <View style={styles.modalView}>
+                                            <Text style={{...styles.text, color: filter[filterSelect]== index ? props.theme: '#666'}}>{d.name}</Text>
+                                        </View>
+                                    </Pressable>
+
                                 ))
                             }
                         </View>

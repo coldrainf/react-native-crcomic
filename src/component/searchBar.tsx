@@ -1,5 +1,5 @@
 import React, { useLayoutEffect, useRef } from 'react'
-import { View, StyleSheet, ViewStyle } from 'react-native'
+import { View, StyleSheet, ViewStyle, Pressable } from 'react-native'
 import { SearchBar, Icon } from 'react-native-elements'
 import { connect } from 'react-redux'
 import { fromJS, is } from 'immutable'
@@ -13,7 +13,7 @@ interface Props extends BaseProps {
     searchInputContainer?: ViewStyle,
     disabled?: boolean,
     showLoading?: boolean,
-    onTouchEnd?: ()=> void
+    onPress?: ()=> void
 }
 
 const CustomSearchBar = (props: Props) => {
@@ -27,24 +27,26 @@ const CustomSearchBar = (props: Props) => {
         }
     },[])
     return (
-        <View pointerEvents={props.disabled ? 'auto': 'box-none'} onTouchEnd={props.onTouchEnd} style={{ backgroundColor: props.theme, ...props.style }}>
-            <SearchBar
-                ref={searchRef}
-                selectionColor='#aaa'
-                containerStyle={{ ...styles.searchContainer, backgroundColor: props.theme }}
-                inputContainerStyle={[styles.searchInputContainer, props.searchInputContainer]}
-                inputStyle={[styles.search, {color: props.disabled ? '#fff' : '#000' }]}
-                placeholderTextColor='#fff'
-                round={true}
-                searchIcon={React.createElement(SearchIcon)}
-                value={props.value}
-                placeholder={props.placeholder}
-                onChangeText={props.onChangeText}
-                disabled={props.disabled}
-                onSubmitEditing={props.onSubmit}
-                showLoading={props.showLoading}
-                loadingProps={{color:props.theme}}
-            />
+        <View style={{ backgroundColor: props.theme, ...props.style }}>
+            <Pressable pointerEvents={props.disabled ? 'auto': 'box-none'} onPress={props.onPress} >
+                <SearchBar
+                    ref={searchRef}
+                    selectionColor='#aaa'
+                    containerStyle={{ ...styles.searchContainer, backgroundColor: props.theme }}
+                    inputContainerStyle={[styles.searchInputContainer, props.searchInputContainer]}
+                    inputStyle={[styles.search, {color: props.disabled ? '#fff' : '#000' }]}
+                    placeholderTextColor='#fff'
+                    round={true}
+                    searchIcon={React.createElement(SearchIcon)}
+                    value={props.value}
+                    placeholder={props.placeholder}
+                    onChangeText={props.onChangeText}
+                    disabled={props.disabled}
+                    onSubmitEditing={props.onSubmit}
+                    showLoading={props.showLoading}
+                    loadingProps={{color:props.theme}}
+                />
+            </Pressable>
         </View>
 
     )

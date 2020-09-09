@@ -17,5 +17,11 @@ storage.sync = {
     searchHistory() {
         return []
     },
+    star() {
+        return false
+    },
+    history() {
+        return false
+    }
 }
 export default storage

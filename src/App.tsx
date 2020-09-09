@@ -33,11 +33,11 @@ const tabData = [
 
 const CustomTabBar = (props: any) => {
   return (
-    <View style={{ flexDirection: 'row', borderTopColor: '#eee', borderTopWidth: 1, height: 56 }}>
+    <View style={{ flexDirection: 'row', borderTopColor: '#eee', borderTopWidth: 1, height: 50 }}>
       {
         props.state.routes.map((element: any, index: number) => (
             <Button key={element.key} onPress={()=>props.navigation.navigate(element.name)}>
-              <View style={{ flex: 1, paddingTop: 8 }}>
+              <View style={{ flex: 1, paddingTop: 4 }}>
                 <Icon {...tabData[index].iconData} color={props.state.index == index ? props.theme : '#555'}></Icon>
                 <Text style={{ color: props.state.index == index ? props.theme : '#555', fontSize: 11, textAlign: 'center' }}>{tabData[index].title}</Text>
               </View>
@@ -63,13 +63,13 @@ const Root = (props: BaseProps) => {
                 props.route.state.routes.pop(),
               ],
             })
-          );
+          )
         }
-        return false; 
+        return false
       } 
-    lastBackPressed = Date.now();
+    lastBackPressed = Date.now()
        
-    ToastAndroid.show('再按一次退出应用', ToastAndroid.SHORT); 
+    ToastAndroid.show('再按一次退出应用', ToastAndroid.SHORT)
     return true; 
   }
 }
