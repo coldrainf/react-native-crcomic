@@ -5,7 +5,7 @@ import {StyleSheet,
     Animated,
 } from 'react-native'
 
-import Button from './button'
+import Button from '../button'
 
 export default class TabBar extends PureComponent<any> {
     constructor(props: any) {

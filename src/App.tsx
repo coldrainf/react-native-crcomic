@@ -1,10 +1,10 @@
 import 'react-native-gesture-handler'
 import React, {useEffect} from 'react'
-import { Text, View, BackHandler,ToastAndroid } from 'react-native'
+import { Text, View, BackHandler,ToastAndroid, Platform, StatusBar } from 'react-native'
 import { Icon } from 'react-native-elements'
 import { Provider, connect } from 'react-redux'
 import { NavigationContainer, StackActions, CommonActions } from '@react-navigation/native'
-import { createStackNavigator, TransitionPresets } from '@react-navigation/stack'
+import { createStackNavigator, TransitionPresets, TransitionSpecs } from '@react-navigation/stack'
 import { createBottomTabNavigator } from '@react-navigation/bottom-tabs'
 // import { enableScreens } from 'react-native-screens'
 // enableScreens()
@@ -16,6 +16,7 @@ import Search from './view/search'
 import All from './view/all'
 import Button from './component/button'
 import Item from './view/item'
+import Image from './view/Image'
 
 const Stack = createStackNavigator()
 const Tab = createBottomTabNavigator()
@@ -67,18 +68,20 @@ const Root = (props: BaseProps) => {
         }
         return false
       } 
-    lastBackPressed = Date.now()
-       
-    ToastAndroid.show('再按一次退出应用', ToastAndroid.SHORT)
-    return true; 
+      lastBackPressed = Date.now()
+        
+      ToastAndroid.show('再按一次退出应用', ToastAndroid.SHORT)
+      return true; 
+    }
   }
-}
-useEffect(() => {
-  let backHandler = BackHandler.addEventListener('hardwareBackPress',onBackButtonPress);
-  return () => backHandler.remove()
-})
+
+  useEffect(() => {
+    let backHandler = BackHandler.addEventListener('hardwareBackPress',onBackButtonPress);
+    return () => backHandler.remove()
+  })
+  
   return (
-    <Tab.Navigator tabBar={props => <ThemeTabBar {...props} />} initialRouteName='All'  >
+    <Tab.Navigator tabBar={props => <ThemeTabBar {...props} />} initialRouteName='Shelf'  >
       <Tab.Screen name="Shelf" component={Shelf} />
       <Tab.Screen name="All" component={All} />
     </Tab.Navigator>
@@ -93,19 +96,21 @@ const Router = (props: BaseProps) => (
         headerShown: false,
         headerTitleAlign: 'center',
         headerTitle:'', 
+        headerStatusBarHeight: 0,
         headerStyle:{
           backgroundColor: props.theme
-        }, 
+        },
         headerTintColor:'#fff',
         headerTitleStyle: {
           fontSize: 18
         },
-        ...TransitionPresets.SlideFromRightIOS,
+        ...TransitionPresets.SlideFromRightIOS
       }}
     >
       <Stack.Screen name="Root" component={Root} options={{animationEnabled:false}} />
       <Stack.Screen name="Search" component={Search} />
       <Stack.Screen name="Item" component={Item} options={({ route }) => ({ headerShown:true,headerTitle: (route.params as any)?.name })} />
+      <Stack.Screen name="Image" component={Image} />
     </Stack.Navigator>
   </NavigationContainer>
 )

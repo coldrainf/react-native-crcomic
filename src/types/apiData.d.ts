@@ -7,10 +7,15 @@ interface ItemBaseData {
     name: string,
 }
 
-interface ListRes extends Res {
-    data: Array<Array<BaseData>>
+interface FilterRes extends Res {
+    data: FilterData
 }
-type ListData = Array<Array<BaseData>>
+type FilterData = Array<Array<BaseData>>
+interface ListRes extends Res {
+    data: ListData
+}
+type ListData = Array<BaseData>
+
 interface BaseData extends ItemBaseData {
     default?: string,
     cover?: string,
@@ -41,4 +46,18 @@ interface ItemData extends ItemBaseData {
 interface ChapterData {
     title: string,
     data: Array<ItemBaseData>
+}
+
+interface ImageRes extends Res {
+    data: ImageData
+}
+interface ImageData extends ItemBaseData {
+    cover: string,
+    originId: string,
+    originName: string,
+    chapterId: string,
+    chapterName: string,
+    images: Array<string>,
+    prev: ItemBaseData | null,
+    next: ItemBaseData | null,
 }

@@ -5787,7 +5787,7 @@ prompts@^2.0.1:
     kleur "^3.0.3"
     sisteransi "^1.0.4"
 
-prop-types@^15.6.0, prop-types@^15.6.2, prop-types@^15.7.2:
+prop-types@^15.5.10, prop-types@^15.6.0, prop-types@^15.6.2, prop-types@^15.7.2:
   version "15.7.2"
   resolved "https://registry.npm.taobao.org/prop-types/download/prop-types-15.7.2.tgz#52c41e75b8c87e72b9d9360e0206b99dcbffa6c5"
   integrity sha1-UsQedbjIfnK52TYOAga5ncv/psU=
@@ -5963,6 +5963,13 @@ react-native-storage@^1.0.1:
   dependencies:
     opencollective "^1.0.3"
     opencollective-postinstall "^2.0.2"
+
+react-native-swiper@^1.6.0:
+  version "1.6.0"
+  resolved "https://registry.npm.taobao.org/react-native-swiper/download/react-native-swiper-1.6.0.tgz#59fdbdf95addee49630312f27077622c27776819"
+  integrity sha1-Wf29+Vrd7kljAxLycHdiLCd3aBk=
+  dependencies:
+    prop-types "^15.5.10"
 
 react-native-vector-icons@^7.0.0:
   version "7.0.0"

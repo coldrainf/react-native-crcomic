@@ -1,11 +1,12 @@
 import React from 'react'
 import { Text, View } from 'react-native'
+import { connect } from 'react-redux'
 
-interface Props {
+interface Props extends BaseProps {
     tabLabel: any,
-    
 }
-export default (props: Props) => {
+
+const History = (props: Props) => {
 
     return (
         <>
@@ -15,3 +16,5 @@ export default (props: Props) => {
         </>
     )
 }
+
+export default connect((state: BaseProps) => ({ theme: state.theme }))(React.memo(History))

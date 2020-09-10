@@ -22,14 +22,14 @@ interface FilterText {
 const filterIcon = () => <Icon name='caretdown' type='antdesign' color='#fff' size={10} />
 
 const All = (props: BaseProps) => {
-    let [filterData, setFilterData] = useState([[]] as ListData)
+    let [filterData, setFilterData] = useState([[]] as FilterData)
     let [filter, setFilter] = useState({'origin':0} as Filter)
     let [filterSelect, setFilterSelect] = useState('')
     let [filterSelectText, setFilterSelectText] = useState({} as FilterText)
     let [filterLoading, setFilterLoading] = useState(true)
 
     useEffect(() => {
-        api('/all/filter').then((res: ListRes) => {
+        api('/all/filter').then((res: FilterRes) => {
             setFilterLoading(false)
             if(res.code) return
             setFilterData(res.data)
@@ -80,7 +80,7 @@ const All = (props: BaseProps) => {
             setFooterRefreshing(true)
         }
         let url = `/${(filterData[0][0].data as Array<BaseData>)[filter.origin].id}/all?${query}`
-        api(url).then(res => {
+        api(url).then((res: ListRes) => {
             if(refresh) setRefreshing(false)
             else setFooterRefreshing(false)  
             if(res.code) return setPage(page = page==1 ? 1 : page-1)

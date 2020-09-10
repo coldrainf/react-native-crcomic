@@ -3,9 +3,9 @@ import { View, StyleSheet } from 'react-native'
 import TabView from 'react-native-scrollable-tab-view'
 import { connect } from 'react-redux'
 
-import TabBar from '../component/tabBar'
-import Collection from '../component/collection'
-import History from '../component/history'
+import TabBar from '../component/shelf/tabBar'
+import Collection from '../component/shelf/collection'
+import History from '../component/shelf/history'
 import Top from '../component/top'
 
 
@@ -18,8 +18,8 @@ const Shelf = (props: BaseProps) => {
           <TabBar {...props1} tabUnderlineDefaultWidth={20} activeColor={"#fff"} inactiveColor={"#eee"} style={{ ...styles.tabBar, backgroundColor: props.theme }} />
         </View>
       )}>
-        <Collection tabLabel='收藏' />
-        <History tabLabel='历史' />
+        <Collection tabLabel='收藏' navigation={props.navigation} />
+        <History tabLabel='历史' navigation={props.navigation} />
       </TabView>
     </>
   );

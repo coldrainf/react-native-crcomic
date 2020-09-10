@@ -1,6 +1,7 @@
 package com.crcomic;
 
 import com.facebook.react.ReactActivity;
+import android.view.View;
 
 public class MainActivity extends ReactActivity {
 
