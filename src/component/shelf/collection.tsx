@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react'
-import { Text, View, FlatList, Button, StatusBar } from 'react-native'
+import { Text, View, FlatList } from 'react-native'
 import { connect } from 'react-redux'
 import storage from '../../storage'
 
@@ -21,15 +21,8 @@ const Shelf = (props: Props) => {
 
     const RenderItem = (itemProps: any) => <Item {...itemProps} navigation={props.navigation} />
 
-    let [status, setStatus] = useState(true)
-    let setStatusBar = () => {
-        StatusBar.setHidden(status)
-        setStatus(!status)
-    }
-
     return (
         <>
-        <Button title='切换' onPress={setStatusBar}></Button>
             <FlatList
                 data={list}
                 renderItem={RenderItem}

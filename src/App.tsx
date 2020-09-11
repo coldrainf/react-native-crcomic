@@ -95,8 +95,7 @@ const Router = (props: BaseProps) => (
       screenOptions={{
         headerShown: false,
         headerTitleAlign: 'center',
-        headerTitle:'', 
-        headerStatusBarHeight: 0,
+        headerTitle:'',
         headerStyle:{
           backgroundColor: props.theme
         },
@@ -104,12 +103,16 @@ const Router = (props: BaseProps) => (
         headerTitleStyle: {
           fontSize: 18
         },
-        ...TransitionPresets.SlideFromRightIOS
+        ...TransitionPresets.SlideFromRightIOS,
+        transitionSpec: {
+          open: TransitionSpecs.FadeInFromBottomAndroidSpec,
+          close: TransitionSpecs.FadeInFromBottomAndroidSpec
+        }
       }}
     >
       <Stack.Screen name="Root" component={Root} options={{animationEnabled:false}} />
       <Stack.Screen name="Search" component={Search} />
-      <Stack.Screen name="Item" component={Item} options={({ route }) => ({ headerShown:true,headerTitle: (route.params as any)?.name })} />
+      <Stack.Screen name="Item" component={Item} />
       <Stack.Screen name="Image" component={Image} />
     </Stack.Navigator>
   </NavigationContainer>

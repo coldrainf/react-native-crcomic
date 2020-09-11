@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react'
 import { View, Text, StyleSheet, ActivityIndicator, StatusBar } from 'react-native'
 import { connect } from 'react-redux'
-import { Image } from 'react-native-elements'
+import { Icon, Image } from 'react-native-elements'
 
 import CustomButton from '../component/button'
 import Loading from '../component/loading'
@@ -13,7 +13,7 @@ import ChapterList from '../component/item/chapterList'
 import { useFocusEffect } from '@react-navigation/native'
 
 const Item = (props: BaseProps) => {
-    const item = props.route.params
+    const item: ItemData = props.route.params
     let [data, setData] = useState(item as ItemData)
     let [loading, setLoading] = useState(true)
     let [history, setHistory] = useState(false as any)
@@ -27,18 +27,28 @@ const Item = (props: BaseProps) => {
             })
         })
     }, [])
-    // useFocusEffect(React.useCallback(() => {
-    //     StatusBar.setHidden(false)
-    // }, []))
     return (
-        <>
+        <View style={[styles.flex, { backgroundColor: props.theme } ]}>
         <Top />
+        <View style={[styles.headerContainer, { backgroundColor: props.theme } ]}>
+            <Text style={styles.headerText} numberOfLines={1}>{item.name}</Text>
+            <View style={styles.headerBackOuterContainer}>
+                <CustomButton onPress={()=>props.navigation.goBack()}>
+                    <View style={styles.headerBackContainer} >
+                        <Icon name='arrowleft' type='antdesign' color='#fff' size={30} />
+                    </View>
+                </CustomButton>
+            </View>
+
+
+            
+        </View>
         {
             loading && <Loading />
         }
         {
             !loading && <View style={styles.flex}>
-                <View style={[styles.headerContainer, { backgroundColor: props.theme }]}>
+                <View style={[styles.detailOuterContainer, { backgroundColor: props.theme }]}>
                     <Image
                         source={{ 
                             uri: data.cover,
@@ -57,7 +67,7 @@ const Item = (props: BaseProps) => {
                         <Text style={styles.text} numberOfLines={6}>{data.desc}</Text>
                     </View>
                 </View>
-                <View style={[styles.headerBottom, { backgroundColor: props.theme}]}>
+                <View style={[styles.detailBottom, { backgroundColor: props.theme}]}>
                     <Text style={styles.text}>{data.status}</Text>
                     <Text style={styles.text}>{data.updateTime}</Text>
                 </View>
@@ -70,7 +80,7 @@ const Item = (props: BaseProps) => {
             </View>
 
         }
-        </>
+        </View>
     )
 }
 
@@ -86,8 +96,33 @@ const styles = StyleSheet.create({
     flexRow: {
         flexDirection: 'row'
     },
-
     headerContainer: {
+        height: 50,
+        justifyContent: 'center',
+        paddingHorizontal: 60,
+        position: 'relative'
+    },
+    headerText: {
+        textAlign: 'center',
+        fontSize: 20,
+        color: '#fff'
+    },
+    headerBackOuterContainer: {
+        position:'absolute',
+        left: 6,
+        bottom:0,
+        width: 50,
+        height: 50,
+        borderRadius: 25,
+        overflow: 'hidden'
+    },
+    headerBackContainer: {
+        width: 50,
+        height: 50,
+        // backgroundColor:'#000',
+        justifyContent: 'center'
+    },
+    detailOuterContainer: {
         flexDirection: 'row',
         paddingHorizontal: 6,
         paddingTop: 8
@@ -111,7 +146,7 @@ const styles = StyleSheet.create({
         color: '#fff',
         marginBottom: 4
     },
-    headerBottom: {
+    detailBottom: {
         flexDirection: 'row',
         justifyContent: 'space-between',
         paddingHorizontal: 6,

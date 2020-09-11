@@ -44,13 +44,13 @@ const ChapterList = (props: Props) => {
     const RenderChapter = (chapterProps: any) => <ChapterItem  { ...chapterProps } />
 
     return (
-        <View style={styles.flex}>
+        <View style={{flex:1, backgroundColor: '#f2f2f2' }}>
             <View style={[styles.chapterHeaderContainer, { backgroundColor: props.theme }]}>
                 <View style={styles.flexRow}>
                     {
                         data?.chapters?.map((c: any, i: number) => (
                             <Pressable key={i} onPress={()=>setSelect(i)}>
-                                <View style={[styles.chapterHeader, select==i && { backgroundColor: '#eee' }]} >
+                                <View style={[styles.chapterHeader, select==i && { backgroundColor: '#f2f2f2' }]} >
                                     <Text style={[styles.chapterHeaderText, select==i && { color: props.theme } ]}>{c.title}</Text>
                                 </View>
                             </Pressable>
@@ -113,7 +113,6 @@ const styles = StyleSheet.create({
         height: 34,
         paddingHorizontal: 12,
         justifyContent: 'center',
-        borderRadius: 2
     },
     chapterHeaderText: {
         color: '#fff',

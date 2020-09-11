@@ -76,7 +76,8 @@ const styles = StyleSheet.create({
         borderTopColor: '#ddd',
         flexDirection: 'row',
         justifyContent: 'space-between',
-        paddingHorizontal: 20
+        paddingHorizontal: 20,
+        backgroundColor: '#f2f2f2'
     },
     footerLeftContainer: {
         flexDirection: 'row',
