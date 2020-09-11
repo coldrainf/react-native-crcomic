@@ -62,14 +62,13 @@ const ImageView = (props: BaseProps) => {
       {
         !!data.images && 
         <ImageViewer 
-          renderImage={ImageItem}
-          failImageSource={{
-            url: 'https://user-images.githubusercontent.com/5962998/48658581-f4170a00-ea1a-11e8-866c-df4f42f21947.gif' 
-          }}
+          // renderImage={ImageItem}
           imageUrls={data.images.map(url => ({
             url: encodeURI(url),
             props: {
-              headers: { Referer: encodeURI(url) } 
+              source: {
+                headers: { Referer: encodeURI(url) } 
+              }
             }
           }))}
         />
