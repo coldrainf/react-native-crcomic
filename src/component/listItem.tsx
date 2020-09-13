@@ -1,4 +1,4 @@
-import React, { Props } from 'react'
+import React from 'react'
 import { View, Text,ActivityIndicator, StyleSheet, Dimensions} from 'react-native'
 import { Image } from 'react-native-elements'
 import LinearGradient from 'react-native-linear-gradient'

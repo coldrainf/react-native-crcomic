@@ -144,7 +144,7 @@ const All = (props: BaseProps) => {
                                 iconRight={true}
                                 loading={filterLoading}
                                 icon={React.createElement(filterIcon)}
-                                onPress={() => { setFilterSelect(f.id) }}
+                                onPress={() => setFilterSelect(f.id) }
                             />
                         )
                     }

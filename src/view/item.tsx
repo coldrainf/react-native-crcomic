@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react'
+import React, { useState, useEffect, useLayoutEffect } from 'react'
 import { View, Text, StyleSheet, ActivityIndicator, StatusBar } from 'react-native'
 import { connect } from 'react-redux'
 import { Icon, Image } from 'react-native-elements'
@@ -17,7 +17,7 @@ const Item = (props: BaseProps) => {
     let [data, setData] = useState(item as ItemData)
     let [loading, setLoading] = useState(true)
     let [history, setHistory] = useState(false as any)
-    useEffect(() => {
+    useLayoutEffect(() => {
         api(`/${item.originId}/item?id=${item.id}`).then((res: ItemRes) => {
             if(res.code != 0) return
             setLoading(false)
@@ -39,9 +39,6 @@ const Item = (props: BaseProps) => {
                     </View>
                 </CustomButton>
             </View>
-
-
-            
         </View>
         {
             loading && <Loading />
@@ -119,7 +116,6 @@ const styles = StyleSheet.create({
     headerBackContainer: {
         width: 50,
         height: 50,
-        // backgroundColor:'#000',
         justifyContent: 'center'
     },
     detailOuterContainer: {
