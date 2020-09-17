@@ -52,7 +52,8 @@ const ImageView = (props: BaseProps) => {
 
 
   let onPress = (e: GestureResponderEvent) => {
-    console.log(e.currentTarget)
+    let touchPointX = e.nativeEvent.pageX
+    console.log(touchPointX)
   }
 
   return (
