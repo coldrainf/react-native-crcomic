@@ -8,6 +8,7 @@ import Top from '../component/top'
 import Loading from '../component/loading'
 import CustomButton from '../component/button'
 import api from '../../config/api'
+import { PanResponder } from 'react-native'
 
 const ImageItem = (props: any) => {
   return (
@@ -51,10 +52,24 @@ const ImageView = (props: BaseProps) => {
   })
 
 
-  let onPress = (e: GestureResponderEvent) => {
-    let touchPointX = e.nativeEvent.pageX
+  let onPress = (evt: GestureResponderEvent) => {
+    evt.persist()
+    let touchPointX = evt.nativeEvent.pageX
     console.log(touchPointX)
   }
+
+
+  let [click, setClick] = useState(false)
+  const _panResponder = PanResponder.create({
+    onStartShouldSetPanResponderCapture: (evt, gestureState) => {
+      // console.log(evt.nativeEvent.locationX)
+      setTimeout(() => {
+        console.log(1111)
+      }, 90);
+      return false
+    },
+  });
+
 
   return (
     <View style={{backgroundColor:'#000',flex:1}}>
@@ -65,18 +80,18 @@ const ImageView = (props: BaseProps) => {
         {
           !loading && 
           <View style={styles.main}>
-            <CustomButton onPress={onPress}>
-              <View style={{width: 300,height: 700,backgroundColor: '#fff'}}>
+            <View style={styles.flex} {..._panResponder.panHandlers}>
                 <ImageViewer
                   index={page}
                   onChange={index=>setTimeout(() => {
                     setPage(index as number)
                   }, 160)}
+                  onClick={()=>console.log('image')}
                   pageAnimateTime={160}
                   saveToLocalByLongPress={false}
                   renderIndicator={()=><></>}
                   backgroundColor='#212121'
-                  doubleClickInterval={200}
+                  doubleClickInterval={0}
                   enablePreload={true}
                   renderImage={ImageItem}
                   style={styles.flex}
@@ -88,9 +103,8 @@ const ImageView = (props: BaseProps) => {
                     }))
                   }
                 />
-              </View>
 
-            </CustomButton>      
+            </View>      
 
             <View style={styles.headerContainer}>
               <Text style={styles.headerText} numberOfLines={1}>{chapter.name}</Text>
