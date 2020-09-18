@@ -1,14 +1,16 @@
 import React, { useEffect, useLayoutEffect, useState } from 'react'
-import { View, Text, StyleSheet, BackHandler, StatusBar, Dimensions, ActivityIndicator, Pressable,TouchableNativeFeedback, GestureResponderEvent } from 'react-native'
+import { View, Text, StyleSheet, BackHandler, StatusBar, Dimensions, ActivityIndicator, Pressable, GestureResponderEvent, Animated } from 'react-native'
 import { connect } from 'react-redux'
 import ImageViewer from 'react-native-image-zoom-viewer'
 import { Icon, Image, Slider } from 'react-native-elements'
+import SystemSetting from 'react-native-system-setting'
 
 import Top from '../component/top'
 import Loading from '../component/loading'
 import CustomButton from '../component/button'
 import api from '../../config/api'
 import { PanResponder } from 'react-native'
+import { Switch } from 'react-native'
 
 const ImageItem = (props: any) => {
   return (
@@ -38,39 +40,81 @@ const ImageView = (props: BaseProps) => {
         if(res.code) return
         setData(res.data)
         setLoading(false)
-        // console.log(res.data.images[0])
         
     })
   }, [])
 
+  const hardwareBack = () => {
+    StatusBar.setHidden(false)
+    console.log(SystemSetting.restoreBrightness())
+    SystemSetting.setAppBrightness(SystemSetting.restoreBrightness())
+  }
   useEffect(() => {
     let backHandler = BackHandler.addEventListener('hardwareBackPress', () => {
-      StatusBar.setHidden(false)
+      hardwareBack()
       return false
     })
     return () => backHandler.remove()
   })
 
-
-  let onPress = (evt: GestureResponderEvent) => {
-    evt.persist()
-    let touchPointX = evt.nativeEvent.pageX
-    console.log(touchPointX)
-  }
-
-
   let [click, setClick] = useState(false)
+  let [showMenu, setShowMenu] = useState(false)
+  let [menuTop, setMenuTop] = useState(new Animated.Value(-50))
+  let [menuBottom, setMenuBottom] = useState(new Animated.Value(100))
+  const switchShowMenu = () => {
+    Animated.timing(menuTop, {
+      toValue: showMenu ? 0 : -50,
+      duration: 200,
+      useNativeDriver: true
+    }).start()
+    Animated.timing(menuBottom, {
+      toValue: showMenu ? 0 : 100,
+      duration: 200,
+      useNativeDriver: true
+    }).start()
+  }
+  const closeShowMenu = () => {
+    if(!showMenu) return false
+    setShowMenu(showMenu=false)
+    switchShowMenu()
+    return true
+  }
   const _panResponder = PanResponder.create({
     onStartShouldSetPanResponderCapture: (evt, gestureState) => {
-      // console.log(evt.nativeEvent.locationX)
+      let x = evt.nativeEvent.pageX
       setTimeout(() => {
-        console.log(1111)
-      }, 90);
+        if(!click) return
+        setClick(click=false)
+        let percentX = x / Dimensions.get('window').width
+        if(percentX <  1/3) {
+          if(closeShowMenu()) return
+          if(page == 0) return
+          setPage(--page)
+        }else if(percentX > 2/3) {
+          if(closeShowMenu()) return
+          if(page == data.images.length - 1) return
+          setPage(++page)
+        }else {
+          setShowMenu(showMenu=!showMenu)
+          switchShowMenu()
+        }
+      }, 90)
+      return false
+    },
+    onMoveShouldSetPanResponder: (evt, gestureState) => {
+      closeShowMenu()
       return false
     },
   });
-
-
+  
+  let [brightness, setBrightness] = useState(0.7)
+  let [defaultBrightness, setDefaultBrightness] = useState(true)
+  useEffect(() => {
+    SystemSetting.saveBrightness()
+  }, [])
+  const changeBrightness = (b: number) => {
+    setBrightness(brightness=b)
+  }
   return (
     <View style={{backgroundColor:'#000',flex:1}}>
       <Top hidden={true} />
@@ -86,7 +130,7 @@ const ImageView = (props: BaseProps) => {
                   onChange={index=>setTimeout(() => {
                     setPage(index as number)
                   }, 160)}
-                  onClick={()=>console.log('image')}
+                  onClick={()=>setClick(click=true)}
                   pageAnimateTime={160}
                   saveToLocalByLongPress={false}
                   renderIndicator={()=><></>}
@@ -103,21 +147,20 @@ const ImageView = (props: BaseProps) => {
                     }))
                   }
                 />
-
             </View>      
 
-            <View style={styles.headerContainer}>
+            <Animated.View style={[styles.headerContainer, { transform: [{ translateY: menuTop }] } ]}>
               <Text style={styles.headerText} numberOfLines={1}>{chapter.name}</Text>
               <View style={styles.headerBackOuterContainer}>
-                  <Pressable onPress={()=>props.navigation.goBack()}>
+                  <Pressable onPress={()=>{hardwareBack();props.navigation.goBack()}}>
                       <View style={styles.headerBackContainer} >
                           <Icon name='arrowleft' type='antdesign' color='#fff' size={30} />
                       </View>
                   </Pressable>
               </View>
-            </View>
+            </Animated.View>
 
-            <View style={styles.menuContainer}>
+            <Animated.View style={[styles.menuContainer, { transform: [{ translateY: menuBottom }] } ]}>
               <View style={[styles.menuItem, styles.sliderContainer]}>
                 <Slider
                   value={page}
@@ -142,7 +185,39 @@ const ImageView = (props: BaseProps) => {
                     </View>
                 </Pressable>
               </View>
-            </View>
+              <View style={[styles.menuItem, styles.flexRow]}>
+                <View style={styles.flexRow}>
+                  <View style={{ height: 30 }}>
+                    <Text style={[styles.text, { lineHeight: 30 }]}>使用系统亮度</Text>
+                  </View>
+                  <Switch
+                    trackColor={{ false: "#fff", true: props.theme }}
+                    thumbColor={defaultBrightness ? props.theme : "#ccc"}
+                    ios_backgroundColor="#3e3e3e"
+                    onValueChange={setDefaultBrightness}
+                    value={defaultBrightness}
+                  />
+                </View>
+                <View style={[styles.flex, styles.sliderContainer, { justifyContent: 'center', position: 'relative' }]}>
+                  <Slider
+                    value={brightness}
+                    onSlidingComplete={changeBrightness}
+                    onValueChange={SystemSetting.setAppBrightness}
+                    maximumValue={1}
+                    step={0.01}
+                    minimumValue={0}
+                    maximumTrackTintColor='#464950'
+                    minimumTrackTintColor='#32aaff'
+                    allowTouchTrack={true}
+                    thumbTintColor='#32aaff'
+                    thumbStyle={styles.thumbStyle}
+                  />
+                  <View>
+                    {/* <Icon /> */}
+                  </View>
+                </View>
+              </View>
+            </Animated.View>
 
           </View>
         }
@@ -153,6 +228,16 @@ const ImageView = (props: BaseProps) => {
 const styles = StyleSheet.create({
   flex: {
     flex: 1
+  },
+  flexRow: {
+    flexDirection: 'row'
+  },
+  flexCenter: {
+    justifyContent: 'center'
+  },
+  text: {
+    color: '#fff',
+    textAlign: 'center'
   },
   imageContainer: {
     flex: 1,
@@ -210,7 +295,8 @@ const styles = StyleSheet.create({
     height: 30,
     justifyContent: 'center',
     // backgroundColor: '#aaa',
-    position: 'relative'
+    position: 'relative',
+    marginVertical: 5
   },
   sliderContainer: {
     paddingHorizontal: 70,

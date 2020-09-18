@@ -8,7 +8,7 @@ interface Props extends BaseProps {
 }
 
 const Top = (props: Props) => (
-    <View style={{backgroundColor: props.hidden ? '#000' : props.theme, height: StatusBar.currentHeight}}>
+    <View style={{backgroundColor: props.hidden ? '#000' : props.theme, height: StatusBar.currentHeight, zIndex: 100}}>
         <StatusBar barStyle='light-content' backgroundColor={'rgba(0,0,0,0)'} translucent hidden={props.hidden}></StatusBar>
     </View>  
 )

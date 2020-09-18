@@ -5976,6 +5976,11 @@ react-native-storage@^1.0.1:
     opencollective "^1.0.3"
     opencollective-postinstall "^2.0.2"
 
+react-native-system-setting@^1.7.5:
+  version "1.7.5"
+  resolved "https://registry.npm.taobao.org/react-native-system-setting/download/react-native-system-setting-1.7.5.tgz#c49cef49f4f69d30e0c89ceead4e802f5301f9a9"
+  integrity sha1-xJzvSfT2nTDgyJzurU6AL1MB+ak=
+
 react-native-vector-icons@^7.0.0:
   version "7.0.0"
   resolved "https://registry.npm.taobao.org/react-native-vector-icons/download/react-native-vector-icons-7.0.0.tgz#5b92ed363c867645daad48c559e1f99efcfbb813"
