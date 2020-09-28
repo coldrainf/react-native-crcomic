@@ -17,16 +17,24 @@ const Item = (props: BaseProps) => {
     let [data, setData] = useState(item as ItemData)
     let [loading, setLoading] = useState(true)
     let [history, setHistory] = useState(false as any)
+
+    const getHistory = () => {
+        storage.load({ key: 'history', id: data.originId+'-'+data.id }).then(res => {
+            if(res) setHistory(history=res)
+        })
+    }
+
     useLayoutEffect(() => {
         api(`/${item.originId}/item?id=${item.id}`).then((res: ItemRes) => {
             if(res.code != 0) return
             setLoading(false)
             setData(res.data)
-            storage.load({ key: 'history', id: res.data.originId+'-'+res.data.id }).then(res => {
-                if(res) setHistory(history=res)
-            })
+            getHistory()
         })
     }, [])
+
+    useFocusEffect(React.useCallback(getHistory, []))
+
     return (
         <View style={[styles.flex, { backgroundColor: props.theme } ]}>
         <Top />

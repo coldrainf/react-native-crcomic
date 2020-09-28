@@ -1,5 +1,5 @@
 import React, { useEffect, useLayoutEffect, useState } from 'react'
-import { View, Text, StyleSheet, BackHandler, StatusBar, Dimensions, ActivityIndicator, Pressable, GestureResponderEvent, Animated } from 'react-native'
+import { View, Text, StyleSheet, FlatList, BackHandler, StatusBar, Dimensions, ActivityIndicator, Pressable, GestureResponderEvent, Animated } from 'react-native'
 import { connect } from 'react-redux'
 import ImageViewer from 'react-native-image-zoom-viewer'
 import { Icon, Image, Slider } from 'react-native-elements'
@@ -9,32 +9,42 @@ import Top from '../component/top'
 import Loading from '../component/loading'
 import CustomButton from '../component/button'
 import api from '../../config/api'
-import { PanResponder } from 'react-native'
+import { PanResponder, Image as RNImage } from 'react-native'
 import { Switch } from 'react-native'
+import storage from '../storage'
+import { useRef } from 'react'
 
-const ImageItem = (props: any) => {
+const ImageItem = React.memo((props: any) => {
+  let [imageHeight, setImageHeight] = useState(0)
+  const uri = props.item ? encodeURI(props.item) : props.source.uri
+  RNImage.getSizeWithHeaders(uri, {Referer: uri}, (width, height) => {
+    setImageHeight(height/width*Dimensions.get('window').width)
+  })
   return (
       <Image
         source={{ 
-          uri: props.source.uri,
-          headers: { Referer: props.source.uri } 
+          uri,
+          headers: { Referer: uri } 
         }} 
         PlaceholderContent={<ActivityIndicator color='#fff' size='large' />}
         placeholderStyle={styles.placeholderStyle}
-        containerStyle={styles.imageContainer}
+        containerStyle={[styles.imageContainer, { height: imageHeight }]}
         resizeMode='contain'
       />
   );
-}
+})
+
+const RenderImageItem = (props: any) => <ImageItem {...props} />
 
 
 const ImageView = (props: BaseProps) => {
   const item: ItemData = props.route.params.item
   const chapter: ItemBaseData = props.route.params.chapter
-  
+  const defaultPage: number = props.route.params.page ? props.route.params.page : 0
+
   let [data, setData] = useState({} as ImageData)
   let [loading, setLoading] = useState(true)
-  let [page, setPage] = useState(0)
+  let [page, setPage] = useState(defaultPage)
   useLayoutEffect(() => {
     api(`/${item.originId}/image?id=${item.id}&chapterId=${chapter.id}`).then((res: ImageRes) => {
         if(res.code) return
@@ -44,9 +54,28 @@ const ImageView = (props: BaseProps) => {
     })
   }, [])
 
+  //记录历史
+  useEffect(() => {
+    storage.save({
+      key: 'history',
+      id: item.originId+'-'+item.id,
+      data: {
+        id: item.id,
+        name: item.name,
+        cover: item.cover,
+        originId: item.originId,
+        originName: item.originName,
+        chapterId: chapter.id,
+        chapterName: chapter.name,
+        page,
+        time: Date.now()
+      },
+    }).then()
+  }, [page])
+
+
   const hardwareBack = () => {
     StatusBar.setHidden(false)
-    console.log(SystemSetting.restoreBrightness())
     SystemSetting.setAppBrightness(SystemSetting.restoreBrightness())
   }
   useEffect(() => {
@@ -113,7 +142,18 @@ const ImageView = (props: BaseProps) => {
     SystemSetting.saveBrightness()
   }, [])
   const changeBrightness = (b: number) => {
-    setBrightness(brightness=b)
+    SystemSetting.setAppBrightness(b)
+    if(defaultBrightness) setDefaultBrightness(false)
+  }
+  const changeDefaultBrightness = (v: boolean) => {
+    setDefaultBrightness(defaultBrightness=v)
+    let b = v ? SystemSetting.restoreBrightness() : brightness
+    SystemSetting.setAppBrightness(brightness=b)
+  }
+
+  let listRef = useRef(null)
+  const onViewableItemsChanged = (info: any) => {
+    // setPage(page=info.viewableItems[0].index)
   }
   return (
     <View style={{backgroundColor:'#000',flex:1}}>
@@ -125,28 +165,36 @@ const ImageView = (props: BaseProps) => {
           !loading && 
           <View style={styles.main}>
             <View style={styles.flex} {..._panResponder.panHandlers}>
-                <ImageViewer
-                  index={page}
-                  onChange={index=>setTimeout(() => {
-                    setPage(index as number)
-                  }, 160)}
-                  onClick={()=>setClick(click=true)}
-                  pageAnimateTime={160}
-                  saveToLocalByLongPress={false}
-                  renderIndicator={()=><></>}
-                  backgroundColor='#212121'
-                  doubleClickInterval={0}
-                  enablePreload={true}
-                  renderImage={ImageItem}
-                  style={styles.flex}
-                  useNativeDriver={true}
-                  imageUrls={data.images.map(url => ({
-                      url: encodeURI(url),
-                      width: Dimensions.get('window').width,
-                      height: Dimensions.get('window').height,
-                    }))
-                  }
-                />
+              <FlatList
+                    ref={listRef}
+                    data={data.images}
+                    renderItem={RenderImageItem}
+                    keyExtractor={(item, k) => item.toString()}
+                    showsVerticalScrollIndicator = {false}
+                    onViewableItemsChanged={onViewableItemsChanged}
+              />
+              {/* <ImageViewer
+                index={page}
+                onChange={index=>setTimeout(() => {
+                  setPage(index as number)
+                }, 160)}
+                onClick={()=>setClick(click=true)}
+                pageAnimateTime={160}
+                saveToLocalByLongPress={false}
+                renderIndicator={()=><></>}
+                backgroundColor='#212121'
+                doubleClickInterval={0}
+                enablePreload={true}
+                renderImage={RenderImageItem}
+                style={styles.flex}
+                useNativeDriver={true}
+                imageUrls={data.images.map(url => ({
+                    url: encodeURI(url),
+                    width: Dimensions.get('window').width,
+                    height: Dimensions.get('window').height,
+                  }))
+                }
+              /> */}
             </View>      
 
             <Animated.View style={[styles.headerContainer, { transform: [{ translateY: menuTop }] } ]}>
@@ -174,12 +222,12 @@ const ImageView = (props: BaseProps) => {
                   thumbTintColor='#32aaff'
                   thumbStyle={styles.thumbStyle}
                 />
-                <Pressable onPress={()=>props.navigation.goBack()}  style={styles.prevContainer} >
+                <Pressable onPress={()=>props.navigation.goBack()} style={styles.prevContainer} >
                     <View>
                       <Text style={styles.prevNextText}>上一话</Text>
                     </View>
                 </Pressable>
-                <Pressable onPress={()=>props.navigation.goBack()}  style={styles.nextContainer} >
+                <Pressable onPress={()=>props.navigation.goBack()} style={styles.nextContainer} >
                     <View>
                       <Text style={styles.prevNextText}>下一话</Text>
                     </View>
@@ -194,15 +242,15 @@ const ImageView = (props: BaseProps) => {
                     trackColor={{ false: "#fff", true: props.theme }}
                     thumbColor={defaultBrightness ? props.theme : "#ccc"}
                     ios_backgroundColor="#3e3e3e"
-                    onValueChange={setDefaultBrightness}
+                    onValueChange={changeDefaultBrightness}
                     value={defaultBrightness}
                   />
                 </View>
-                <View style={[styles.flex, styles.sliderContainer, { justifyContent: 'center', position: 'relative' }]}>
+                <View style={[styles.flex, styles.brightnessSliderContainer]}>
                   <Slider
                     value={brightness}
-                    onSlidingComplete={changeBrightness}
-                    onValueChange={SystemSetting.setAppBrightness}
+                    onSlidingComplete={setBrightness}
+                    onValueChange={changeBrightness}
                     maximumValue={1}
                     step={0.01}
                     minimumValue={0}
@@ -211,9 +259,13 @@ const ImageView = (props: BaseProps) => {
                     allowTouchTrack={true}
                     thumbTintColor='#32aaff'
                     thumbStyle={styles.thumbStyle}
+                    disabled={defaultBrightness}
                   />
-                  <View>
-                    {/* <Icon /> */}
+                  <View style={styles.prevContainer}>
+                    <Icon name='moon-o' type='font-awesome' color='#fff' size={18} />
+                  </View>
+                  <View style={styles.nextContainer}>
+                    <Icon name='sun' type='feather' color='#fff' size={18} />
                   </View>
                 </View>
               </View>
@@ -241,6 +293,7 @@ const styles = StyleSheet.create({
   },
   imageContainer: {
     flex: 1,
+    // height: 600
   },
   placeholderStyle: {
     flex: 1,
@@ -250,7 +303,6 @@ const styles = StyleSheet.create({
     backgroundColor:'#212121',
     flex:1,
     position: 'relative',
-    paddingTop: StatusBar.currentHeight
   },
   headerContainer: {
     position: 'absolute',
@@ -296,10 +348,16 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     // backgroundColor: '#aaa',
     position: 'relative',
-    marginVertical: 5
+    marginVertical: 5,
+    paddingHorizontal: 10
   },
   sliderContainer: {
-    paddingHorizontal: 70,
+    paddingHorizontal: 80,
+  },
+  brightnessSliderContainer: {
+    paddingHorizontal: 50,
+    justifyContent: 'center',
+    position: 'relative'
   },
   thumbStyle: {
     width:  14,
@@ -325,6 +383,7 @@ const styles = StyleSheet.create({
     color: '#fff',
     textAlign: 'center',
   },
+
   pressArea: {
     position: 'absolute',
     top: 0,

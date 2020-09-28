@@ -33,7 +33,6 @@ const Footer = (props: Props) => {
                 key: 'star',
                 id: item.originId+'-'+item.id,
                 data: item,
-                expires: 1000 * 60,
             }).then(()=> {
                 setStar(star=true)
             })
@@ -43,7 +42,11 @@ const Footer = (props: Props) => {
     let jump = () => {
         if(!props.data.chapters) return
         let len = props.data.chapters[0].data.length
-        props.navigation.navigate('Image', {item, chapter: props.data.chapters[0].data[len-1]})
+        props.navigation.navigate('Image', {
+            item, 
+            chapter: props.data.chapters[0].data[len-1],
+            page: props.history ? props.history.page : 0
+        })
     }
 
     return (
