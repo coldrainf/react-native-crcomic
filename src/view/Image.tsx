@@ -15,10 +15,10 @@ import storage from '../storage'
 import { useRef } from 'react'
 
 const ImageItem = React.memo((props: any) => {
-  let [imageHeight, setImageHeight] = useState(0)
+  let [imageHeight, setImageHeight] = useState(Dimensions.get('window').width/891*1280)
   const uri = props.item ? encodeURI(props.item) : props.source.uri
   RNImage.getSizeWithHeaders(uri, {Referer: uri}, (width, height) => {
-    setImageHeight(height/width*Dimensions.get('window').width)
+    setImageHeight(Dimensions.get('window').width/width*height)
   })
   return (
       <Image
@@ -35,6 +35,37 @@ const ImageItem = React.memo((props: any) => {
 })
 
 const RenderImageItem = (props: any) => <ImageItem {...props} />
+
+const LongList = React.memo((props: any) => {
+  let listRef = useRef(null as any)
+  const onViewableItemsChanged = (info: any) => {
+    let p = info?.viewableItems?.pop()?.index
+    if(!p) return
+    props.setPage(p)
+  }
+  useEffect(() => {
+    
+    setTimeout(() => {
+      if(!listRef?.current?.scrollToIndex) return
+      listRef.current.scrollToIndex({ index: props.page })
+    }, 0)
+  }, [props.image])
+  return (
+    <FlatList
+      ref={listRef}
+      data={props.images}
+      renderItem={RenderImageItem}
+      keyExtractor={(item, k) => item.toString()}
+      showsVerticalScrollIndicator = {false}
+      getItemLayout={(item, index) => ({ length: Dimensions.get('window').width/891*1280, offset: Dimensions.get('window').width/891*1280*index, index  })}
+      onViewableItemsChanged={onViewableItemsChanged}
+      onTouchStart={props.onTouchStart}
+      onTouchMove={props.onTouchMove}
+      onTouchEnd={props.onTouchEnd}
+    />
+  )
+}, (prevProps: any, nextProps: any) => prevProps.images === nextProps.images)
+
 
 
 const ImageView = (props: BaseProps) => {
@@ -89,7 +120,8 @@ const ImageView = (props: BaseProps) => {
   let [click, setClick] = useState(false)
   let [showMenu, setShowMenu] = useState(false)
   let [menuTop, setMenuTop] = useState(new Animated.Value(-50))
-  let [menuBottom, setMenuBottom] = useState(new Animated.Value(100))
+  const bottomHeight = 40 + 40 * 3
+  let [menuBottom, setMenuBottom] = useState(new Animated.Value(bottomHeight))
   const switchShowMenu = () => {
     Animated.timing(menuTop, {
       toValue: showMenu ? 0 : -50,
@@ -97,7 +129,7 @@ const ImageView = (props: BaseProps) => {
       useNativeDriver: true
     }).start()
     Animated.timing(menuBottom, {
-      toValue: showMenu ? 0 : 100,
+      toValue: showMenu ? 0 : bottomHeight,
       duration: 200,
       useNativeDriver: true
     }).start()
@@ -110,16 +142,17 @@ const ImageView = (props: BaseProps) => {
   }
   const _panResponder = PanResponder.create({
     onStartShouldSetPanResponderCapture: (evt, gestureState) => {
+      if(upDown) return false
       let x = evt.nativeEvent.pageX
-      setTimeout(() => {
+      const touchFunc = () => {
         if(!click) return
         setClick(click=false)
         let percentX = x / Dimensions.get('window').width
-        if(percentX <  1/3) {
+        if(percentX <  1/3 && !upDown) {
           if(closeShowMenu()) return
           if(page == 0) return
           setPage(--page)
-        }else if(percentX > 2/3) {
+        }else if(percentX > 2/3 && !upDown) {
           if(closeShowMenu()) return
           if(page == data.images.length - 1) return
           setPage(++page)
@@ -127,11 +160,12 @@ const ImageView = (props: BaseProps) => {
           setShowMenu(showMenu=!showMenu)
           switchShowMenu()
         }
-      }, 90)
+      }
+      setTimeout(touchFunc, 80)
       return false
     },
     onMoveShouldSetPanResponder: (evt, gestureState) => {
-      closeShowMenu()
+      if(!upDown) closeShowMenu()
       return false
     },
   });
@@ -151,12 +185,17 @@ const ImageView = (props: BaseProps) => {
     SystemSetting.setAppBrightness(brightness=b)
   }
 
-  let listRef = useRef(null)
-  const onViewableItemsChanged = (info: any) => {
-    // setPage(page=info.viewableItems[0].index)
+  let [upDown, setUpDown] = useState(false)
+
+  const onTouchEnd = () => {
+    if(!click) return
+    setClick(click=false)
+    setShowMenu(showMenu=!showMenu)
+    switchShowMenu()
   }
+
   return (
-    <View style={{backgroundColor:'#000',flex:1}}>
+    <View style={{backgroundColor:'#000',flex:1,position:'absolute',height:100}}>
       <Top hidden={true} />
         {
           loading && <Loading image />
@@ -165,37 +204,45 @@ const ImageView = (props: BaseProps) => {
           !loading && 
           <View style={styles.main}>
             <View style={styles.flex} {..._panResponder.panHandlers}>
-              <FlatList
-                    ref={listRef}
-                    data={data.images}
-                    renderItem={RenderImageItem}
-                    keyExtractor={(item, k) => item.toString()}
-                    showsVerticalScrollIndicator = {false}
-                    onViewableItemsChanged={onViewableItemsChanged}
-              />
-              {/* <ImageViewer
-                index={page}
-                onChange={index=>setTimeout(() => {
-                  setPage(index as number)
-                }, 160)}
-                onClick={()=>setClick(click=true)}
-                pageAnimateTime={160}
-                saveToLocalByLongPress={false}
-                renderIndicator={()=><></>}
-                backgroundColor='#212121'
-                doubleClickInterval={0}
-                enablePreload={true}
-                renderImage={RenderImageItem}
-                style={styles.flex}
-                useNativeDriver={true}
-                imageUrls={data.images.map(url => ({
-                    url: encodeURI(url),
-                    width: Dimensions.get('window').width,
-                    height: Dimensions.get('window').height,
-                  }))
-                }
-              /> */}
-            </View>      
+              {
+                upDown && <LongList 
+                  images={data.images} 
+                  page={page} 
+                  setPage={setPage}
+                  onTouchStart={()=>setClick(click=true)}
+                  onTouchMove={()=>{setClick(click=false);closeShowMenu()}}
+                  onTouchEnd={onTouchEnd}
+                />
+              }
+              {
+                !upDown && <ImageViewer
+                  index={page}
+                  onChange={index=>setTimeout(() => {
+                    setPage(index as number)
+                  }, 160)}
+                  onClick={()=>setClick(click=true)}
+                  pageAnimateTime={160}
+                  saveToLocalByLongPress={false}
+                  renderIndicator={()=><></>}
+                  backgroundColor='#212121'
+                  doubleClickInterval={0}
+                  enablePreload={true}
+                  renderImage={RenderImageItem}
+                  style={styles.flex}
+                  useNativeDriver={true}
+                  imageUrls={data.images.map(url => ({
+                      url: encodeURI(url),
+                      width: Dimensions.get('window').width,
+                      height: Dimensions.get('window').height,
+                    }))
+                  }
+                />
+              }
+            </View>
+
+            <View style={styles.infoContainer}>
+
+            </View>
 
             <Animated.View style={[styles.headerContainer, { transform: [{ translateY: menuTop }] } ]}>
               <Text style={styles.headerText} numberOfLines={1}>{chapter.name}</Text>
@@ -233,7 +280,7 @@ const ImageView = (props: BaseProps) => {
                     </View>
                 </Pressable>
               </View>
-              <View style={[styles.menuItem, styles.flexRow]}>
+              <View style={styles.menuItem}>
                 <View style={styles.flexRow}>
                   <View style={{ height: 30 }}>
                     <Text style={[styles.text, { lineHeight: 30 }]}>使用系统亮度</Text>
@@ -268,6 +315,24 @@ const ImageView = (props: BaseProps) => {
                     <Icon name='sun' type='feather' color='#fff' size={18} />
                   </View>
                 </View>
+              </View>
+              <View style={styles.menuItem}>
+                <View style={styles.menuItemLeftContainer}>
+                  <Text style={styles.menuItemLeftText}>阅读模式</Text>
+                </View>
+                <View style={styles.flexRow}>
+                  <CustomButton onPress={()=>setUpDown(false)}>
+                    <View style={[styles.menuItemRightContainer, { borderColor: upDown ? '#fff' : '#2196F3' } ]}>
+                      <Text style={[styles.menuItemRightText, { color: upDown ? '#fff' : '#2196F3' } ]}>翻页模式</Text>
+                    </View>
+                  </CustomButton>
+                  <CustomButton onPress={()=>setUpDown(true)}>
+                    <View style={[styles.menuItemRightContainer, { borderColor: !upDown ? '#fff' : '#2196F3' } ]}>
+                      <Text style={[styles.menuItemRightText, { color: !upDown ? '#fff' : '#2196F3' } ]}>滚动模式</Text>
+                    </View>
+                  </CustomButton>
+                </View>
+
               </View>
             </Animated.View>
 
@@ -304,6 +369,15 @@ const styles = StyleSheet.create({
     flex:1,
     position: 'relative',
   },
+  infoContainer: {
+    position: 'absolute',
+    bottom: 0,
+    right: 0,
+    height: 30,
+    backgroundColor: '#fff',
+    paddingHorizontal: 10,
+  },
+
   headerContainer: {
     position: 'absolute',
     top: 0,
@@ -345,13 +419,15 @@ const styles = StyleSheet.create({
   },
   menuItem: {
     height: 30,
-    justifyContent: 'center',
+    justifyContent: 'space-between',
     // backgroundColor: '#aaa',
     position: 'relative',
     marginVertical: 5,
-    paddingHorizontal: 10
+    paddingHorizontal: 10,
+    flexDirection: 'row'
   },
   sliderContainer: {
+    flexDirection: 'column',
     paddingHorizontal: 80,
   },
   brightnessSliderContainer: {
@@ -383,14 +459,25 @@ const styles = StyleSheet.create({
     color: '#fff',
     textAlign: 'center',
   },
-
-  pressArea: {
-    position: 'absolute',
-    top: 0,
-    left: 0,
-    width: Dimensions.get('window').width,
-    height: Dimensions.get('window').height,
-    backgroundColor: 'rgba(0,0,0,.5)'
+  menuItemLeftContainer: {
+    height: 30,
+    justifyContent: 'center',
+  },
+  menuItemLeftText: {
+    color: '#fff',
+  },
+  menuItemRightContainer: {
+    marginHorizontal: 8,
+    paddingHorizontal: 10,
+    borderRadius: 4,
+    borderColor: '#fff',
+    borderWidth: 1,
+    justifyContent: 'center',
+    alignItems: 'center'
+  },
+  menuItemRightText: {
+    fontSize: 12,
+    color: '#fff'
   }
 })
 
