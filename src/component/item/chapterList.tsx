@@ -35,8 +35,8 @@ const ChapterList = (props: Props) => {
             props.navigation.navigate('Image', {item, chapter: chapterProps.item})
         }
         return (
-            <View onTouchEnd={jump} style={[styles.chapterContainer, { backgroundColor: props.history?.chapterId==chapterProps.item.id ? props.theme : '#fff' } ]}>
-                <Text style={[styles.chapterText, { color: props.history?.chapterId==chapterProps.item.id ? '#fff' : '#555' } ]} numberOfLines={2} >{chapterProps.item.name}</Text>
+            <View onTouchEnd={jump} style={[styles.chapterContainer, { backgroundColor: props.history?.chapter?.id==chapterProps.item.id ? props.theme : '#fff' } ]}>
+                <Text style={[styles.chapterText, { color: props.history?.chapter?.id==chapterProps.item.id ? '#fff' : '#555' } ]} numberOfLines={2} >{chapterProps.item.name}</Text>
             </View>
         )
     })

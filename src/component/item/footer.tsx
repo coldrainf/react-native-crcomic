@@ -44,7 +44,7 @@ const Footer = (props: Props) => {
         let len = props.data.chapters[0].data.length
         props.navigation.navigate('Image', {
             item, 
-            chapter: props.data.chapters[0].data[len-1],
+            chapter: props.history ? props.history.chapter : props.data.chapters[0].data[len-1],
             page: props.history ? props.history.page : 0
         })
     }
@@ -62,7 +62,7 @@ const Footer = (props: Props) => {
             <View style={styles.footerRight}>
                 <CustomButton onPress={jump}  >
                     <View style={[styles.footerRightContainer, { backgroundColor: props.theme } ]}>
-                        <Text style={styles.footerRightText} numberOfLines={1}>{props.history ? '续读'+ props.history?.chapterName : '开始阅读'}</Text>
+                        <Text style={styles.footerRightText} numberOfLines={1}>{props.history ? '续读'+ props.history?.chapter?.name : '开始阅读'}</Text>
                     </View>
                 </CustomButton>
             </View>

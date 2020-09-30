@@ -14,6 +14,8 @@ import { Switch } from 'react-native'
 import storage from '../storage'
 import { useRef } from 'react'
 
+import NetInfo from "@react-native-community/netinfo"
+
 const ImageItem = React.memo((props: any) => {
   let [imageHeight, setImageHeight] = useState(Dimensions.get('window').width/891*1280)
   const uri = props.item ? encodeURI(props.item) : props.source.uri
@@ -96,8 +98,7 @@ const ImageView = (props: BaseProps) => {
         cover: item.cover,
         originId: item.originId,
         originName: item.originName,
-        chapterId: chapter.id,
-        chapterName: chapter.name,
+        chapter,
         page,
         time: Date.now()
       },
@@ -194,8 +195,18 @@ const ImageView = (props: BaseProps) => {
     switchShowMenu()
   }
 
+  let [net, setNet] = useState('')
+  useEffect(() => {
+    const unsubscribe = NetInfo.addEventListener(state => {
+      if(!state.isConnected) setNet(net='')
+      else setNet(net=state.type)
+      console.log(state.isInternetReachable);
+      return unsubscribe
+    })
+  })
+
   return (
-    <View style={{backgroundColor:'#000',flex:1,position:'absolute',height:100}}>
+    <View style={{backgroundColor:'#000',flex:1}}>
       <Top hidden={true} />
         {
           loading && <Loading image />
@@ -241,7 +252,9 @@ const ImageView = (props: BaseProps) => {
             </View>
 
             <View style={styles.infoContainer}>
-
+              <Text>{chapter.name}</Text>
+              <Text>{page+1+'/'+data?.images.length}</Text>
+              <Text>{net}</Text>
             </View>
 
             <Animated.View style={[styles.headerContainer, { transform: [{ translateY: menuTop }] } ]}>
@@ -376,6 +389,7 @@ const styles = StyleSheet.create({
     height: 30,
     backgroundColor: '#fff',
     paddingHorizontal: 10,
+    flexDirection: 'row'
   },
 
   headerContainer: {
