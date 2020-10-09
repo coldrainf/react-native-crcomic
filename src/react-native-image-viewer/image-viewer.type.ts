@@ -2,7 +2,7 @@ import * as React from 'react';
 import { Image, ImageURISource, Text, View, ViewStyle } from 'react-native';
 import { simpleStyle } from './image-viewer.style';
 
-export interface IOnClick {
+interface IOnClick {
   locationX: number;
   locationY: number;
   pageX: number;
