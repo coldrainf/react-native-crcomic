@@ -1,7 +1,7 @@
 import React, { useEffect, useLayoutEffect, useState } from 'react'
 import { View, Text, StyleSheet, FlatList, BackHandler, StatusBar, Dimensions, ActivityIndicator, Pressable, GestureResponderEvent, Animated } from 'react-native'
 import { connect } from 'react-redux'
-import ImageViewer from 'react-native-image-zoom-viewer'
+import ImageViewer from '../react-native-image-viewer/'
 import { Icon, Image, Slider } from 'react-native-elements'
 import SystemSetting from 'react-native-system-setting'
 
@@ -200,10 +200,13 @@ const ImageView = (props: BaseProps) => {
     const unsubscribe = NetInfo.addEventListener(state => {
       if(!state.isConnected) setNet(net='')
       else setNet(net=state.type)
-      console.log(state.isInternetReachable);
       return unsubscribe
     })
   })
+
+  let eventFunc = (evt: any) => {
+    console.log(evt)
+  }
 
   return (
     <View style={{backgroundColor:'#000',flex:1}}>
@@ -215,6 +218,7 @@ const ImageView = (props: BaseProps) => {
           !loading && 
           <View style={styles.main}>
             <View style={styles.flex} {..._panResponder.panHandlers}>
+            {/* <View style={styles.flex}> */}
               {
                 upDown && <LongList 
                   images={data.images} 
@@ -226,12 +230,14 @@ const ImageView = (props: BaseProps) => {
                 />
               }
               {
-                !upDown && <ImageViewer
+                !upDown && 
+                // <CustomButton onPress={eventFunc}>
+                  <ImageViewer
                   index={page}
                   onChange={index=>setTimeout(() => {
                     setPage(index as number)
                   }, 160)}
-                  onClick={()=>setClick(click=true)}
+                  onClick={(a,b, params)=>console.log(params?.pageX)}
                   pageAnimateTime={160}
                   saveToLocalByLongPress={false}
                   renderIndicator={()=><></>}
@@ -248,6 +254,9 @@ const ImageView = (props: BaseProps) => {
                     }))
                   }
                 />
+                // </CustomButton>
+
+
               }
             </View>
 
