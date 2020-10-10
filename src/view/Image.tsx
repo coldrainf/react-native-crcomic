@@ -1,7 +1,7 @@
 import React, { useEffect, useLayoutEffect, useState } from 'react'
 import { View, Text, StyleSheet, FlatList, BackHandler, StatusBar, Dimensions, ActivityIndicator, Pressable, GestureResponderEvent, Animated } from 'react-native'
 import { connect } from 'react-redux'
-import ImageViewer from '../react-native-image-viewer/'
+import ImageViewer from '../component/react-native-image-viewer/'
 import { Icon, Image, Slider } from 'react-native-elements'
 import SystemSetting from 'react-native-system-setting'
 
@@ -15,6 +15,7 @@ import storage from '../storage'
 import { useRef } from 'react'
 
 import NetInfo from "@react-native-community/netinfo"
+import { IOnClick } from '../component/react-native-image-viewer/image-viewer.type'
 
 const ImageItem = React.memo((props: any) => {
   let [imageHeight, setImageHeight] = useState(Dimensions.get('window').width/891*1280)
@@ -141,6 +142,21 @@ const ImageView = (props: BaseProps) => {
     switchShowMenu()
     return true
   }
+  const onClickImageViewer = (pageX: number) => {
+    let percentX = pageX / Dimensions.get('window').width
+    if(percentX <  1/3 && !upDown) {
+      if(closeShowMenu()) return
+      if(page == 0) return
+      setPage(--page)
+    }else if(percentX > 2/3 && !upDown) {
+      if(closeShowMenu()) return
+      if(page == data.images.length - 1) return
+      setPage(++page)
+    }else {
+      setShowMenu(showMenu=!showMenu)
+      switchShowMenu()
+    }
+  }
   const _panResponder = PanResponder.create({
     onStartShouldSetPanResponderCapture: (evt, gestureState) => {
       if(upDown) return false
@@ -166,7 +182,6 @@ const ImageView = (props: BaseProps) => {
       return false
     },
     onMoveShouldSetPanResponder: (evt, gestureState) => {
-      if(!upDown) closeShowMenu()
       return false
     },
   });
@@ -204,10 +219,6 @@ const ImageView = (props: BaseProps) => {
     })
   })
 
-  let eventFunc = (evt: any) => {
-    console.log(evt)
-  }
-
   return (
     <View style={{backgroundColor:'#000',flex:1}}>
       <Top hidden={true} />
@@ -217,8 +228,8 @@ const ImageView = (props: BaseProps) => {
         {
           !loading && 
           <View style={styles.main}>
-            <View style={styles.flex} {..._panResponder.panHandlers}>
-            {/* <View style={styles.flex}> */}
+            {/* <View style={styles.flex} {..._panResponder.panHandlers}> */}
+            <View style={styles.flex}>
               {
                 upDown && <LongList 
                   images={data.images} 
@@ -230,14 +241,14 @@ const ImageView = (props: BaseProps) => {
                 />
               }
               {
-                !upDown && 
-                // <CustomButton onPress={eventFunc}>
+                !upDown && !!data.images &&
                   <ImageViewer
                   index={page}
                   onChange={index=>setTimeout(() => {
                     setPage(index as number)
                   }, 160)}
-                  onClick={(a,b, params)=>console.log(params?.pageX)}
+                  onClick={(close, currentShowIndex, eventParams)=>onClickImageViewer((eventParams as any).pageX)}
+                  onMove={closeShowMenu}
                   pageAnimateTime={160}
                   saveToLocalByLongPress={false}
                   renderIndicator={()=><></>}
@@ -247,15 +258,13 @@ const ImageView = (props: BaseProps) => {
                   renderImage={RenderImageItem}
                   style={styles.flex}
                   useNativeDriver={true}
-                  imageUrls={data.images.map(url => ({
+                  imageUrls={data.images ? data.images.map(url => ({
                       url: encodeURI(url),
                       width: Dimensions.get('window').width,
                       height: Dimensions.get('window').height,
-                    }))
+                    })) : []
                   }
                 />
-                // </CustomButton>
-
 
               }
             </View>
