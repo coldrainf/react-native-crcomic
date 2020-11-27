@@ -1,39 +1,52 @@
-import React, { useEffect, useLayoutEffect, useState } from 'react'
-import { View, Text, StyleSheet, FlatList, BackHandler, StatusBar, Dimensions, ActivityIndicator, Pressable, GestureResponderEvent, Animated } from 'react-native'
+/**
+ * 漫画浏览页
+ */
+import React, { useEffect, useLayoutEffect, useState, useRef } from 'react'
+import {
+  View,
+  Text,
+  StyleSheet,
+  FlatList,
+  BackHandler,
+  StatusBar,
+  Dimensions,
+  ActivityIndicator,
+  Pressable,
+  Animated,
+  PanResponder,
+  Image as RNImage,
+  Switch
+} from 'react-native'
 import { connect } from 'react-redux'
 import ImageViewer from '../component/react-native-image-viewer/'
 import { Icon, Image, Slider } from 'react-native-elements'
 import SystemSetting from 'react-native-system-setting'
+import NetInfo from "@react-native-community/netinfo"
 
+import api from '../../config/api'
+import storage from '../storage'
 import Top from '../component/top'
 import Loading from '../component/loading'
 import CustomButton from '../component/button'
-import api from '../../config/api'
-import { PanResponder, Image as RNImage } from 'react-native'
-import { Switch } from 'react-native'
-import storage from '../storage'
-import { useRef } from 'react'
 
-import NetInfo from "@react-native-community/netinfo"
-import { IOnClick } from '../component/react-native-image-viewer/image-viewer.type'
 
 const ImageItem = React.memo((props: any) => {
-  let [imageHeight, setImageHeight] = useState(Dimensions.get('window').width/891*1280)
+  let [imageHeight, setImageHeight] = useState(Dimensions.get('window').width / 891 * 1280)
   const uri = props.item ? encodeURI(props.item) : props.source.uri
-  RNImage.getSizeWithHeaders(uri, {Referer: uri}, (width, height) => {
-    setImageHeight(Dimensions.get('window').width/width*height)
+  RNImage.getSizeWithHeaders(uri, { Referer: uri }, (width, height) => {
+    setImageHeight(Dimensions.get('window').width / width * height)
   })
   return (
-      <Image
-        source={{ 
-          uri,
-          headers: { Referer: uri } 
-        }} 
-        PlaceholderContent={<ActivityIndicator color='#fff' size='large' />}
-        placeholderStyle={styles.placeholderStyle}
-        containerStyle={[styles.imageContainer, { height: imageHeight }]}
-        resizeMode='contain'
-      />
+    <Image
+      source={{
+        uri,
+        headers: { Referer: uri }
+      }}
+      PlaceholderContent={<ActivityIndicator color='#fff' size='large' />}
+      placeholderStyle={styles.placeholderStyle}
+      containerStyle={[styles.imageContainer, { height: imageHeight }]}
+      resizeMode='contain'
+    />
   );
 })
 
@@ -43,13 +56,13 @@ const LongList = React.memo((props: any) => {
   let listRef = useRef(null as any)
   const onViewableItemsChanged = (info: any) => {
     let p = info?.viewableItems?.pop()?.index
-    if(!p) return
+    if (!p) return
     props.setPage(p)
   }
   useEffect(() => {
-    
+
     setTimeout(() => {
-      if(!listRef?.current?.scrollToIndex) return
+      if (!listRef?.current?.scrollToIndex) return
       listRef.current.scrollToIndex({ index: props.page })
     }, 0)
   }, [props.image])
@@ -59,8 +72,8 @@ const LongList = React.memo((props: any) => {
       data={props.images}
       renderItem={RenderImageItem}
       keyExtractor={(item, k) => item.toString()}
-      showsVerticalScrollIndicator = {false}
-      getItemLayout={(item, index) => ({ length: Dimensions.get('window').width/891*1280, offset: Dimensions.get('window').width/891*1280*index, index  })}
+      showsVerticalScrollIndicator={false}
+      getItemLayout={(item, index) => ({ length: Dimensions.get('window').width / 891 * 1280, offset: Dimensions.get('window').width / 891 * 1280 * index, index })}
       onViewableItemsChanged={onViewableItemsChanged}
       onTouchStart={props.onTouchStart}
       onTouchMove={props.onTouchMove}
@@ -81,10 +94,10 @@ const ImageView = (props: BaseProps) => {
   let [page, setPage] = useState(defaultPage)
   useLayoutEffect(() => {
     api(`/${item.originId}/image?id=${item.id}&chapterId=${chapter.id}`).then((res: ImageRes) => {
-        if(res.code) return
-        setData(res.data)
-        setLoading(false)
-        
+      if (res.code) return
+      setData(res.data)
+      setLoading(false)
+
     })
   }, [])
 
@@ -92,7 +105,7 @@ const ImageView = (props: BaseProps) => {
   useEffect(() => {
     storage.save({
       key: 'history',
-      id: item.originId+'-'+item.id,
+      id: item.originId + '-' + item.id,
       data: {
         id: item.id,
         name: item.name,
@@ -137,44 +150,44 @@ const ImageView = (props: BaseProps) => {
     }).start()
   }
   const closeShowMenu = () => {
-    if(!showMenu) return false
-    setShowMenu(showMenu=false)
+    if (!showMenu) return false
+    setShowMenu(showMenu = false)
     switchShowMenu()
     return true
   }
   const onClickImageViewer = (pageX: number) => {
     let percentX = pageX / Dimensions.get('window').width
-    if(percentX <  1/3 && !upDown) {
-      if(closeShowMenu()) return
-      if(page == 0) return
+    if (percentX < 1 / 3 && !upDown) {
+      if (closeShowMenu()) return
+      if (page == 0) return
       setPage(--page)
-    }else if(percentX > 2/3 && !upDown) {
-      if(closeShowMenu()) return
-      if(page == data.images.length - 1) return
+    } else if (percentX > 2 / 3 && !upDown) {
+      if (closeShowMenu()) return
+      if (page == data.images.length - 1) return
       setPage(++page)
-    }else {
-      setShowMenu(showMenu=!showMenu)
+    } else {
+      setShowMenu(showMenu = !showMenu)
       switchShowMenu()
     }
   }
   const _panResponder = PanResponder.create({
     onStartShouldSetPanResponderCapture: (evt, gestureState) => {
-      if(upDown) return false
+      if (upDown) return false
       let x = evt.nativeEvent.pageX
       const touchFunc = () => {
-        if(!click) return
-        setClick(click=false)
+        if (!click) return
+        setClick(click = false)
         let percentX = x / Dimensions.get('window').width
-        if(percentX <  1/3 && !upDown) {
-          if(closeShowMenu()) return
-          if(page == 0) return
+        if (percentX < 1 / 3 && !upDown) {
+          if (closeShowMenu()) return
+          if (page == 0) return
           setPage(--page)
-        }else if(percentX > 2/3 && !upDown) {
-          if(closeShowMenu()) return
-          if(page == data.images.length - 1) return
+        } else if (percentX > 2 / 3 && !upDown) {
+          if (closeShowMenu()) return
+          if (page == data.images.length - 1) return
           setPage(++page)
-        }else {
-          setShowMenu(showMenu=!showMenu)
+        } else {
+          setShowMenu(showMenu = !showMenu)
           switchShowMenu()
         }
       }
@@ -185,7 +198,7 @@ const ImageView = (props: BaseProps) => {
       return false
     },
   });
-  
+
   let [brightness, setBrightness] = useState(0.7)
   let [defaultBrightness, setDefaultBrightness] = useState(true)
   useEffect(() => {
@@ -193,185 +206,187 @@ const ImageView = (props: BaseProps) => {
   }, [])
   const changeBrightness = (b: number) => {
     SystemSetting.setAppBrightness(b)
-    if(defaultBrightness) setDefaultBrightness(false)
+    if (defaultBrightness) setDefaultBrightness(false)
   }
   const changeDefaultBrightness = (v: boolean) => {
-    setDefaultBrightness(defaultBrightness=v)
+    setDefaultBrightness(defaultBrightness = v)
     let b = v ? SystemSetting.restoreBrightness() : brightness
-    SystemSetting.setAppBrightness(brightness=b)
+    SystemSetting.setAppBrightness(brightness = b)
   }
 
   let [upDown, setUpDown] = useState(false)
 
   const onTouchEnd = () => {
-    if(!click) return
-    setClick(click=false)
-    setShowMenu(showMenu=!showMenu)
+    if (!click) return
+    setClick(click = false)
+    setShowMenu(showMenu = !showMenu)
     switchShowMenu()
   }
 
   let [net, setNet] = useState('')
   useEffect(() => {
     const unsubscribe = NetInfo.addEventListener(state => {
-      if(!state.isConnected) setNet(net='')
-      else setNet(net=state.type)
+      if (!state.isConnected) setNet(net = '')
+      else setNet(net = state.type)
       return unsubscribe
     })
   })
 
   return (
-    <View style={{backgroundColor:'#000',flex:1}}>
+    <View style={{ backgroundColor: '#000', flex: 1 }}>
       <Top hidden={true} />
-        {
-          loading && <Loading image />
-        }
-        {
-          !loading && 
-          <View style={styles.main}>
-            {/* <View style={styles.flex} {..._panResponder.panHandlers}> */}
-            <View style={styles.flex}>
-              {
-                upDown && <LongList 
-                  images={data.images} 
-                  page={page} 
-                  setPage={setPage}
-                  onTouchStart={()=>setClick(click=true)}
-                  onTouchMove={()=>{setClick(click=false);closeShowMenu()}}
-                  onTouchEnd={onTouchEnd}
-                />
-              }
-              {
-                !upDown && !!data.images &&
-                  <ImageViewer
-                  index={page}
-                  onChange={index=>setTimeout(() => {
-                    setPage(index as number)
-                  }, 160)}
-                  onClick={(close, currentShowIndex, eventParams)=>onClickImageViewer((eventParams as any).pageX)}
-                  onMove={closeShowMenu}
-                  pageAnimateTime={160}
-                  saveToLocalByLongPress={false}
-                  renderIndicator={()=><></>}
-                  backgroundColor='#212121'
-                  doubleClickInterval={0}
-                  enablePreload={true}
-                  renderImage={RenderImageItem}
-                  style={styles.flex}
-                  useNativeDriver={true}
-                  imageUrls={data.images ? data.images.map(url => ({
-                      url: encodeURI(url),
-                      width: Dimensions.get('window').width,
-                      height: Dimensions.get('window').height,
-                    })) : []
-                  }
-                />
+      {
+        loading && <Loading image />
+      }
+      {
+        !loading &&
+        <View style={styles.main}>
+          {/* <View style={styles.flex} {..._panResponder.panHandlers}> */}
+          <View style={styles.flex}>
+            {
+              upDown && <LongList
+                images={data.images}
+                page={page}
+                setPage={setPage}
+                onTouchStart={() => setClick(click = true)}
+                onTouchMove={() => { setClick(click = false); closeShowMenu() }}
+                onTouchEnd={onTouchEnd}
+              />
+            }
+            {
+              !upDown && !!data.images &&
+              <ImageViewer
+                index={page}
+                onChange={index => setTimeout(() => {
+                  setPage(index as number)
+                }, 160)}
+                onClick={(close, currentShowIndex, eventParams) => onClickImageViewer((eventParams as any).pageX)}
+                onMove={closeShowMenu}
+                pageAnimateTime={160}
+                saveToLocalByLongPress={false}
+                renderIndicator={() => <></>}
+                backgroundColor='#212121'
+                doubleClickInterval={0}
+                enablePreload={true}
+                renderImage={RenderImageItem}
+                style={styles.flex}
+                useNativeDriver={true}
+                imageUrls={data.images ? data.images.map(url => ({
+                  url: encodeURI(url),
+                  width: Dimensions.get('window').width,
+                  height: Dimensions.get('window').height,
+                })) : []
+                }
+              />
 
-              }
+            }
+          </View>
+
+          <View style={styles.infoContainer}>
+            <Text>{chapter.name}</Text>
+            <Text>{page + 1 + '/' + data?.images.length}</Text>
+            <Text>{net}</Text>
+          </View>
+
+          <Animated.View style={[styles.headerContainer, { transform: [{ translateY: menuTop }] }]}>
+            <Text style={styles.headerText} numberOfLines={1}>{chapter.name}</Text>
+            <View style={styles.headerBackOuterContainer}>
+              <Pressable onPress={() => { hardwareBack(); props.navigation.goBack() }}>
+                <View style={styles.headerBackContainer} >
+                  <Icon name='arrowleft' type='antdesign' color='#fff' size={30} />
+                </View>
+              </Pressable>
             </View>
+          </Animated.View>
 
-            <View style={styles.infoContainer}>
-              <Text>{chapter.name}</Text>
-              <Text>{page+1+'/'+data?.images.length}</Text>
-              <Text>{net}</Text>
+          <Animated.View style={[styles.menuContainer, { transform: [{ translateY: menuBottom }] }]}>
+            <View style={[styles.menuItem, styles.sliderContainer]}>
+              <Slider
+                value={page}
+                onSlidingComplete={setPage}
+                maximumValue={data.images.length - 1}
+                step={1}
+                minimumValue={0}
+                maximumTrackTintColor='#464950'
+                minimumTrackTintColor='#32aaff'
+                allowTouchTrack={true}
+                thumbTintColor='#32aaff'
+                thumbStyle={styles.thumbStyle}
+              />
+              <Pressable onPress={() => props.navigation.goBack()} style={styles.prevContainer} >
+                <View>
+                  <Text style={styles.prevNextText}>上一话</Text>
+                </View>
+              </Pressable>
+              <Pressable onPress={() => props.navigation.goBack()} style={styles.nextContainer} >
+                <View>
+                  <Text style={styles.prevNextText}>下一话</Text>
+                </View>
+              </Pressable>
             </View>
-
-            <Animated.View style={[styles.headerContainer, { transform: [{ translateY: menuTop }] } ]}>
-              <Text style={styles.headerText} numberOfLines={1}>{chapter.name}</Text>
-              <View style={styles.headerBackOuterContainer}>
-                  <Pressable onPress={()=>{hardwareBack();props.navigation.goBack()}}>
-                      <View style={styles.headerBackContainer} >
-                          <Icon name='arrowleft' type='antdesign' color='#fff' size={30} />
-                      </View>
-                  </Pressable>
+            <View style={styles.menuItem}>
+              <View style={styles.flexRow}>
+                <View style={{ height: 30 }}>
+                  <Text style={[styles.text, { lineHeight: 30 }]}>使用系统亮度</Text>
+                </View>
+                <Switch
+                  trackColor={{ false: "#fff", true: props.theme }}
+                  thumbColor={defaultBrightness ? props.theme : "#ccc"}
+                  ios_backgroundColor="#3e3e3e"
+                  onValueChange={changeDefaultBrightness}
+                  value={defaultBrightness}
+                />
               </View>
-            </Animated.View>
-
-            <Animated.View style={[styles.menuContainer, { transform: [{ translateY: menuBottom }] } ]}>
-              <View style={[styles.menuItem, styles.sliderContainer]}>
+              <View style={[styles.flex, styles.brightnessSliderContainer]}>
                 <Slider
-                  value={page}
-                  onSlidingComplete={setPage}
-                  maximumValue={data.images.length-1}
-                  step={1}
+                  value={brightness}
+                  onSlidingComplete={setBrightness}
+                  onValueChange={changeBrightness}
+                  maximumValue={1}
+                  step={0.01}
                   minimumValue={0}
                   maximumTrackTintColor='#464950'
                   minimumTrackTintColor='#32aaff'
                   allowTouchTrack={true}
                   thumbTintColor='#32aaff'
                   thumbStyle={styles.thumbStyle}
+                  disabled={defaultBrightness}
                 />
-                <Pressable onPress={()=>props.navigation.goBack()} style={styles.prevContainer} >
-                    <View>
-                      <Text style={styles.prevNextText}>上一话</Text>
-                    </View>
-                </Pressable>
-                <Pressable onPress={()=>props.navigation.goBack()} style={styles.nextContainer} >
-                    <View>
-                      <Text style={styles.prevNextText}>下一话</Text>
-                    </View>
-                </Pressable>
-              </View>
-              <View style={styles.menuItem}>
-                <View style={styles.flexRow}>
-                  <View style={{ height: 30 }}>
-                    <Text style={[styles.text, { lineHeight: 30 }]}>使用系统亮度</Text>
-                  </View>
-                  <Switch
-                    trackColor={{ false: "#fff", true: props.theme }}
-                    thumbColor={defaultBrightness ? props.theme : "#ccc"}
-                    ios_backgroundColor="#3e3e3e"
-                    onValueChange={changeDefaultBrightness}
-                    value={defaultBrightness}
-                  />
+                <View style={styles.prevContainer}>
+                  <Icon name='moon-o' type='font-awesome' color='#fff' size={18} />
                 </View>
-                <View style={[styles.flex, styles.brightnessSliderContainer]}>
-                  <Slider
-                    value={brightness}
-                    onSlidingComplete={setBrightness}
-                    onValueChange={changeBrightness}
-                    maximumValue={1}
-                    step={0.01}
-                    minimumValue={0}
-                    maximumTrackTintColor='#464950'
-                    minimumTrackTintColor='#32aaff'
-                    allowTouchTrack={true}
-                    thumbTintColor='#32aaff'
-                    thumbStyle={styles.thumbStyle}
-                    disabled={defaultBrightness}
-                  />
-                  <View style={styles.prevContainer}>
-                    <Icon name='moon-o' type='font-awesome' color='#fff' size={18} />
-                  </View>
-                  <View style={styles.nextContainer}>
-                    <Icon name='sun' type='feather' color='#fff' size={18} />
-                  </View>
+                <View style={styles.nextContainer}>
+                  <Icon name='sun' type='feather' color='#fff' size={18} />
                 </View>
               </View>
-              <View style={styles.menuItem}>
-                <View style={styles.menuItemLeftContainer}>
-                  <Text style={styles.menuItemLeftText}>阅读模式</Text>
-                </View>
-                <View style={styles.flexRow}>
-                  <CustomButton onPress={()=>setUpDown(false)}>
-                    <View style={[styles.menuItemRightContainer, { borderColor: upDown ? '#fff' : '#2196F3' } ]}>
-                      <Text style={[styles.menuItemRightText, { color: upDown ? '#fff' : '#2196F3' } ]}>翻页模式</Text>
-                    </View>
-                  </CustomButton>
-                  <CustomButton onPress={()=>setUpDown(true)}>
-                    <View style={[styles.menuItemRightContainer, { borderColor: !upDown ? '#fff' : '#2196F3' } ]}>
-                      <Text style={[styles.menuItemRightText, { color: !upDown ? '#fff' : '#2196F3' } ]}>滚动模式</Text>
-                    </View>
-                  </CustomButton>
-                </View>
+            </View>
+            <View style={styles.menuItem}>
+              <View style={styles.menuItemLeftContainer}>
+                <Text style={styles.menuItemLeftText}>阅读模式</Text>
+              </View>
+              <View style={styles.flexRow}>
+                <CustomButton onPress={() => setUpDown(false)}>
+                  <View style={[styles.menuItemRightContainer, { borderColor: upDown ? '#fff' : '#2196F3' }]}>
+                    <Text style={[styles.menuItemRightText, { color: upDown ? '#fff' : '#2196F3' }]}>翻页模式</Text>
+                  </View>
+                </CustomButton>
+                <CustomButton onPress={() => setUpDown(true)}>
+                  <View style={[styles.menuItemRightContainer, { borderColor: !upDown ? '#fff' : '#2196F3' }]}>
+                    <Text style={[styles.menuItemRightText, { color: !upDown ? '#fff' : '#2196F3' }]}>滚动模式</Text>
+                  </View>
+                </CustomButton>
+              </View>
 
-              </View>
-            </Animated.View>
+            </View>
+          </Animated.View>
 
-          </View>
-        }
+        </View>
+      }
     </View>
   );
 }
+
+export default connect((state: BaseProps) => ({ theme: state.theme }))(ImageView)
 
 const styles = StyleSheet.create({
   flex: {
@@ -396,8 +411,8 @@ const styles = StyleSheet.create({
     backgroundColor: '#212121'
   },
   main: {
-    backgroundColor:'#212121',
-    flex:1,
+    backgroundColor: '#212121',
+    flex: 1,
     position: 'relative',
   },
   infoContainer: {
@@ -425,19 +440,19 @@ const styles = StyleSheet.create({
     color: '#fff'
   },
   headerBackOuterContainer: {
-      position:'absolute',
-      left: 6,
-      bottom:0,
-      width: 50,
-      height: 50,
-      borderRadius: 25,
-      overflow: 'hidden'
+    position: 'absolute',
+    left: 6,
+    bottom: 0,
+    width: 50,
+    height: 50,
+    borderRadius: 25,
+    overflow: 'hidden'
   },
   headerBackContainer: {
-      width: 50,
-      height: 50,
-      // backgroundColor:'#000',
-      justifyContent: 'center'
+    width: 50,
+    height: 50,
+    // backgroundColor:'#000',
+    justifyContent: 'center'
   },
   menuContainer: {
     position: 'absolute',
@@ -468,7 +483,7 @@ const styles = StyleSheet.create({
     position: 'relative'
   },
   thumbStyle: {
-    width:  14,
+    width: 14,
     height: 14
   },
   prevContainer: {
@@ -512,5 +527,3 @@ const styles = StyleSheet.create({
     color: '#fff'
   }
 })
-
-export default connect((state: BaseProps) => ({ theme: state.theme }))(ImageView)

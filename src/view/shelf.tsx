@@ -1,12 +1,15 @@
+/**
+ * 书架页面
+ */
 import React from 'react'
 import { View, StyleSheet } from 'react-native'
 import TabView from 'react-native-scrollable-tab-view'
 import { connect } from 'react-redux'
 
+import Top from '../component/top'
 import TabBar from '../component/shelf/tabBar'
 import Collection from '../component/shelf/collection'
 import History from '../component/shelf/history'
-import Top from '../component/top'
 
 
 const Shelf = (props: BaseProps) => {
@@ -14,8 +17,17 @@ const Shelf = (props: BaseProps) => {
     <>
       <Top />
       <TabView renderTabBar={props1 => (
-        <View style={{backgroundColor: props.theme}}>
-          <TabBar {...props1} tabUnderlineDefaultWidth={20} activeColor={"#fff"} inactiveColor={"#eee"} style={{ ...styles.tabBar, backgroundColor: props.theme }} />
+        <View style={{ backgroundColor: props.theme }}>
+          <TabBar
+            {...props1}
+            tabUnderlineDefaultWidth={20}
+            activeColor={"#fff"}
+            inactiveColor={"#eee"}
+            style={{
+              ...styles.tabBar,
+              backgroundColor: props.theme
+            }}
+          />
         </View>
       )}>
         <Collection tabLabel='收藏' navigation={props.navigation} />

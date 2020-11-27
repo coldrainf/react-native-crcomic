@@ -10,9 +10,9 @@ const History = (props: Props) => {
 
     return (
         <>
-        <View style={{ flex:1 }}>
-            <Text>这里是history</Text>
-        </View>
+            <View style={{ flex: 1 }}>
+                <Text>这里是history</Text>
+            </View>
         </>
     )
 }

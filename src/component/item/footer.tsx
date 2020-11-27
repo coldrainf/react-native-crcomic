@@ -16,35 +16,35 @@ const Footer = (props: Props) => {
     const item = props.item
     let [star, setStar] = useState(false)
     useEffect(() => {
-        storage.load({ key: 'star', id: item.originId+'-'+item.id }).then(res => {
-            if(res) setStar(star=true)
+        storage.load({ key: 'star', id: item.originId + '-' + item.id }).then(res => {
+            if (res) setStar(star = true)
         })
     }, [])
     let changeStar = () => {
-        if(star) {
+        if (star) {
             storage.remove({
                 key: 'star',
-                id: item.originId+'-'+item.id,
+                id: item.originId + '-' + item.id,
             }).then(() => {
-                setStar(star=false)
+                setStar(star = false)
             })
-        }else {
+        } else {
             storage.save({
                 key: 'star',
-                id: item.originId+'-'+item.id,
+                id: item.originId + '-' + item.id,
                 data: item,
-            }).then(()=> {
-                setStar(star=true)
+            }).then(() => {
+                setStar(star = true)
             })
         }
     }
 
     let jump = () => {
-        if(!props.data.chapters) return
+        if (!props.data.chapters) return
         let len = props.data.chapters[0].data.length
         props.navigation.navigate('Image', {
-            item, 
-            chapter: props.history ? props.history.chapter : props.data.chapters[0].data[len-1],
+            item,
+            chapter: props.history ? props.history.chapter : props.data.chapters[0].data[len - 1],
             page: props.history ? props.history.page : 0
         })
     }
@@ -61,8 +61,8 @@ const Footer = (props: Props) => {
             </View>
             <View style={styles.footerRight}>
                 <CustomButton onPress={jump}  >
-                    <View style={[styles.footerRightContainer, { backgroundColor: props.theme } ]}>
-                        <Text style={styles.footerRightText} numberOfLines={1}>{props.history ? '续读'+ props.history?.chapter?.name : '开始阅读'}</Text>
+                    <View style={[styles.footerRightContainer, { backgroundColor: props.theme }]}>
+                        <Text style={styles.footerRightText} numberOfLines={1}>{props.history ? '续读' + props.history?.chapter?.name : '开始阅读'}</Text>
                     </View>
                 </CustomButton>
             </View>
@@ -90,14 +90,14 @@ const styles = StyleSheet.create({
     },
     footerLeftText: {
         marginLeft: 2
-    },    
+    },
     footerRight: {
         alignSelf: 'center',
         overflow: 'hidden',
         borderRadius: 50,
         height: 44,
         width: 176,
-    },    
+    },
     footerRightContainer: {
         flexDirection: 'row',
         alignItems: 'center',

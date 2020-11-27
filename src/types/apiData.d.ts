@@ -40,7 +40,7 @@ interface ItemData extends ItemBaseData {
     status: string,
     updateTime?: string,
     desc: string,
-    chapters: Array<ChapterData> 
+    chapters: Array<ChapterData>
 }
 
 interface ChapterData {

@@ -14,7 +14,7 @@ const Shelf = (props: Props) => {
     let [list, setList] = useState([] as ListData)
     let getStar = () => {
         storage.getAllDataForKey('star').then(res => {
-            if(res) setList(res.reverse())
+            if (res) setList(res.reverse())
         })
     }
     useFocusEffect(React.useCallback(getStar, []))

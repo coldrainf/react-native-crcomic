@@ -7,8 +7,17 @@ interface Props extends BaseProps {
 }
 
 const Loading = (props: Props) => (
-    <View style={{ flex: 1, justifyContent: 'center', alignItems: 'center', backgroundColor: props.image ? '#212121' : '#f2f2f2' }}>
-        <ActivityIndicator color={props.image ? '#fff' : props.theme} size='large' />
+    <View
+        style={{
+            flex: 1,
+            justifyContent: 'center',
+            alignItems: 'center',
+            backgroundColor: props.image ? '#212121' : '#f2f2f2'
+        }}>
+        <ActivityIndicator
+            color={props.image ? '#fff' : props.theme}
+            size='large'
+        />
     </View>
 )
 

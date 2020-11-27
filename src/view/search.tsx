@@ -1,21 +1,37 @@
+/**
+ * 搜索界面
+ */
 import React, { useState, useEffect, useRef } from 'react'
-import { Text, View, StyleSheet, FlatList, ActivityIndicator, Keyboard, Pressable } from 'react-native'
+import {
+    Text,
+    View,
+    StyleSheet,
+    FlatList,
+    ActivityIndicator,
+    Keyboard,
+    Pressable
+} from 'react-native'
 import { Icon } from 'react-native-elements'
 import { connect } from 'react-redux'
 import { fromJS, is } from 'immutable'
 
+import storage from '../storage'
+import api from '../../config/api'
 import Top from '../component/top'
 import SearchBar from '../component/searchBar'
-import api from '../../config/api'
 import Item from '../component/listItem'
 import Button from '../component/button'
-import storage from '../storage'
+
 
 const Search = (props: BaseProps) => {
-    let [kw, setKw] = useState('')
-    let [showHistory, setShowHistory] = useState(true)
-    let [searchHistory, setSearchHistory] = useState([] as Array<string>)
-    let [historyDel, setHistoryDel] = useState(Array(10).fill(false))
+    //搜索关键词
+    const [kw, setKw] = useState('')
+    //是否显示搜索历史
+    const [showHistory, setShowHistory] = useState(true)
+    //搜索历史
+    const [searchHistory, setSearchHistory] = useState<string[]>([])
+    //搜索历史删除按钮显示
+    const [historyDel, setHistoryDel] = useState(Array(10).fill(false))
     useEffect(() => {
         if (kw == '') setShowHistory(true)
     }, [kw])
@@ -23,30 +39,39 @@ const Search = (props: BaseProps) => {
         storage.load({ key: 'searchHistory' }).then(res => setSearchHistory(res))
     }, [])
 
-    let [list, setList] = useState([] as ListData)
-    let [refreshing, setRefreshing] = useState(false)
-    let [footerRefreshing, setFooterRefreshing] = useState(false)
-    let [page, setPage] = useState(1)
-    let [last, setLast] = useState(false)
-    let listRef = useRef(null)
-    let [lastData, setLastData] = useState([] as ListData)
-    let load = (refresh?: boolean) => {
+    //漫画列表数据
+    const [list, setList] = useState<ListData>([])
+    //下拉状态
+    const [refreshing, setRefreshing] = useState(false)
+    //上划状态
+    const [footerRefreshing, setFooterRefreshing] = useState(false)
+    //页数
+    const [page, setPage] = useState(1)
+    //后面是否无数据
+    const [last, setLast] = useState(false)
+    //上一页数据，若与当前页数据相同则后面无数据
+    const lastData = useRef<ListData>([])
+    //FlatList ref
+    const listRef = useRef<any>(null)
+
+    //获取当前搜索条件的漫画数据
+    const load = (refresh?: boolean) => {
         if (kw == '') return
         if (refresh) setRefreshing(true)
         else {
             if (refreshing || last) return
             setFooterRefreshing(true)
         }
-        let url = `/all/search?kw=${kw}&page=${page}`
+        const url = `/all/search?kw=${kw}&page=${page}`
         console.log(url)
         if (refresh) setList([])
         api(url).then((res: ListRes) => {
             if (refresh) setRefreshing(false)
             else setFooterRefreshing(false)
-            if (res.code) return setPage(page = page == 1 ? 1 : page - 1)
-            if (!res.data.length || (!refresh && is(fromJS(lastData), fromJS(res.data)))) return setLast(true)
+            if (res.code) return setPage(page == 1 ? 1 : page - 1)
+            if (!res.data.length || (!refresh && is(fromJS(lastData.current), fromJS(res.data)))) return setLast(true)
             setLast(false)
-            setLastData(res.data)
+            lastData.current = res.data
             if (refresh) setList(res.data)
             else if (!refreshing) {
                 list.push(...res.data)
@@ -54,12 +79,15 @@ const Search = (props: BaseProps) => {
             }
         })
     }
-    let onEndReached = () => {
-        setPage(++page)
+
+    //下拉加载
+    const onEndReached = () => {
+        setPage(page + 1)
         load()
     }
 
-    let resetSearchHistory = (tmp: Array<string>) => {
+    //限制搜索结果数量
+    const resetSearchHistory = (tmp: string[]) => {
         tmp = tmp.slice(0, 9)
         setSearchHistory(tmp)
         storage.save({
@@ -67,7 +95,9 @@ const Search = (props: BaseProps) => {
             data: tmp
         })
     }
-    let onSubmit = () => {
+
+    //显示搜索结果
+    const onSubmit = () => {
         if (kw == '') return
         Keyboard.dismiss()
         setShowHistory(false)
@@ -75,22 +105,25 @@ const Search = (props: BaseProps) => {
         resetSearchHistory(tmp)
         setHistoryDel(Array(10).fill(false))
         try {
-            (listRef.current as any).scrollToIndex({ index: 0, viewPosition: 0 })
+            listRef.current?.scrollToIndex({ index: 0, viewPosition: 0 })
         } catch (err) { }
-        setPage(page = 1)
+        setPage(1)
         load(true)
     }
 
-    let jumpHistory = (h: string, i: number) => {
-        setKw(kw = h)
+    //点击搜索历史时跳转
+    const jumpHistory = (h: string, i: number) => {
+        setKw(h)
         onSubmit()
     }
-    let showHistoryDel = (i: number) => {
+    //显示搜索历史删除按钮
+    const showHistoryDel = (i: number) => {
         let tmp = [...historyDel]
         tmp[i] = true
         setHistoryDel(tmp)
     }
-    let delHistory = (i: number) => {
+    //删除某个搜索历史
+    const delHistory = (i: number) => {
         let tmp = [...searchHistory]
         tmp.splice(i, 1)
         let tmp2 = [...historyDel]
@@ -98,9 +131,10 @@ const Search = (props: BaseProps) => {
         resetSearchHistory(tmp)
         setHistoryDel(tmp2)
     }
-    let clearHistory = () => {
+    //清空搜索历史
+    const clearHistory = () => {
         resetSearchHistory([])
-        setHistoryDel(historyDel = Array(10).fill(false))
+        setHistoryDel(Array(10).fill(false))
     }
 
     const RenderItem = (itemProps: any) => <Item {...itemProps} navigation={props.navigation} />
@@ -110,8 +144,18 @@ const Search = (props: BaseProps) => {
             <Top />
             <View style={styles.flex}>
                 <View style={styles.flexRow}>
-                    <SearchBar value={kw} onChangeText={k => setKw(k.slice(0, 23))} onSubmit={onSubmit} showLoading={refreshing} style={styles.searchBar} searchInputContainer={styles.searchBarContainer} />
-                    <Pressable onPress={() => props.navigation.goBack()} style={{backgroundColor: props.theme}}>
+                    <SearchBar
+                        value={kw}
+                        onChangeText={k => setKw(k.slice(0, 23))}
+                        onSubmit={onSubmit}
+                        showLoading={refreshing}
+                        style={styles.searchBar}
+                        searchInputContainer={styles.searchBarContainer}
+                    />
+                    <Pressable
+                        onPress={() => props.navigation.goBack()}
+                        style={{ backgroundColor: props.theme }}
+                    >
                         <View style={[styles.cancelContainer, { backgroundColor: props.theme }]} >
                             <Text style={styles.cancelText}>取消</Text>
                         </View>
@@ -125,14 +169,23 @@ const Search = (props: BaseProps) => {
                             <View style={styles.historyContainer}>
                                 {
                                     searchHistory.map((h, i) => (
-                                        <Button onPress={() => jumpHistory(h, i)} onLongPress={() => showHistoryDel(i)} key={i} hitSlop={{top: 2, bottom: 2, left: 2, right: 2}}>
+                                        <Button
+                                            onPress={() => jumpHistory(h, i)}
+                                            onLongPress={() => showHistoryDel(i)}
+                                            key={i}
+                                            hitSlop={{ top: 2, bottom: 2, left: 2, right: 2 }}
+                                        >
                                             <View key={i} style={styles.historyItemContainer}>
                                                 <Text style={styles.historyItem}>{h}</Text>
                                                 {
-                                                    historyDel[i] && <Pressable onPress={() => { delHistory(i) }} style={styles.historyDelContainer} hitSlop={{top: 4, bottom: 6, left: 4, right: 4}}>
-                                                            <Text style={styles.historyDel}>X</Text>
+                                                    historyDel[i] &&
+                                                    <Pressable
+                                                        onPress={() => { delHistory(i) }}
+                                                        style={styles.historyDelContainer}
+                                                        hitSlop={{ top: 4, bottom: 6, left: 4, right: 4 }}
+                                                    >
+                                                        <Text style={styles.historyDel}>X</Text>
                                                     </Pressable>
-
                                                 }
                                             </View>
                                         </Button>
@@ -144,7 +197,12 @@ const Search = (props: BaseProps) => {
                                 searchHistory.length > 0 && <View style={styles.clearOuterContainer}>
                                     <Pressable onPress={clearHistory}>
                                         <View style={styles.clearContainer} >
-                                            <Icon name='delete' type='antdesign' color='#444' size={14} />
+                                            <Icon
+                                                name='delete'
+                                                type='antdesign'
+                                                color='#444'
+                                                size={14}
+                                            />
                                             <Text style={styles.clear}>清空搜索历史</Text>
                                         </View>
                                     </Pressable>

@@ -1,5 +1,12 @@
-import React, { useState, useEffect, useRef } from 'react'
-import { View, Text, StyleSheet, FlatList, Dimensions, Pressable, StatusBar } from 'react-native'
+import React, { useState, useRef } from 'react'
+import {
+    View,
+    Text,
+    StyleSheet,
+    FlatList,
+    Dimensions,
+    Pressable
+} from 'react-native'
 import { connect } from 'react-redux'
 import { Icon } from 'react-native-elements'
 import { fromJS, is } from 'immutable'
@@ -14,13 +21,13 @@ interface Props extends BaseProps {
 
 const ChapterList = (props: Props) => {
     const item = props.item
-    let [data, setData] = useState(JSON.parse(JSON.stringify(props.data)) as ItemData)
+    let [data, setData] = useState<ItemData>(JSON.parse(JSON.stringify(props.data)))
 
     let [select, setSelect] = useState(0)
     let [sort, setSort] = useState(true)
     let listRef = useRef(null)
     let changeSort = () => {
-        if(!data.chapters) return
+        if (!data.chapters) return
         try {
             (listRef.current as any).scrollToIndex({ index: 0, viewPosition: 0 })
         } catch (err) { }
@@ -32,26 +39,26 @@ const ChapterList = (props: Props) => {
     const ChapterItem = React.memo((chapterProps: any) => {
         let jump = () => {
             // StatusBar.setHidden(true)
-            props.navigation.navigate('Image', {item, chapter: chapterProps.item})
+            props.navigation.navigate('Image', { item, chapter: chapterProps.item })
         }
         return (
-            <View onTouchEnd={jump} style={[styles.chapterContainer, { backgroundColor: props.history?.chapter?.id==chapterProps.item.id ? props.theme : '#fff' } ]}>
-                <Text style={[styles.chapterText, { color: props.history?.chapter?.id==chapterProps.item.id ? '#fff' : '#555' } ]} numberOfLines={2} >{chapterProps.item.name}</Text>
+            <View onTouchEnd={jump} style={[styles.chapterContainer, { backgroundColor: props.history?.chapter?.id == chapterProps.item.id ? props.theme : '#fff' }]}>
+                <Text style={[styles.chapterText, { color: props.history?.chapter?.id == chapterProps.item.id ? '#fff' : '#555' }]} numberOfLines={2} >{chapterProps.item.name}</Text>
             </View>
         )
     })
 
-    const RenderChapter = (chapterProps: any) => <ChapterItem  { ...chapterProps } />
+    const RenderChapter = (chapterProps: any) => <ChapterItem  {...chapterProps} />
 
     return (
-        <View style={{flex:1, backgroundColor: '#f2f2f2' }}>
+        <View style={{ flex: 1, backgroundColor: '#f2f2f2' }}>
             <View style={[styles.chapterHeaderContainer, { backgroundColor: props.theme }]}>
                 <View style={styles.flexRow}>
                     {
                         data?.chapters?.map((c: any, i: number) => (
-                            <Pressable key={i} onPress={()=>setSelect(i)}>
-                                <View style={[styles.chapterHeader, select==i && { backgroundColor: '#f2f2f2' }]} >
-                                    <Text style={[styles.chapterHeaderText, select==i && { color: props.theme } ]}>{c.title}</Text>
+                            <Pressable key={i} onPress={() => setSelect(i)}>
+                                <View style={[styles.chapterHeader, select == i && { backgroundColor: '#f2f2f2' }]} >
+                                    <Text style={[styles.chapterHeaderText, select == i && { color: props.theme }]}>{c.title}</Text>
                                 </View>
                             </Pressable>
                         ))
@@ -74,11 +81,11 @@ const ChapterList = (props: Props) => {
                         keyExtractor={(item, k) => item.id.toString()}
                         horizontal={false}
                         numColumns={3}
-                        showsVerticalScrollIndicator = {false}
+                        showsVerticalScrollIndicator={false}
                         ListFooterComponent={
-                            <View style={{height: 30}}></View>
+                            <View style={{ height: 30 }}></View>
                         }
-                        getItemLayout={(data, index) => ({length: ITEM_HEIGHT+8, offset: (ITEM_HEIGHT+8) * index, index})}
+                        getItemLayout={(data, index) => ({ length: ITEM_HEIGHT + 8, offset: (ITEM_HEIGHT + 8) * index, index })}
                     />
                 }
             </View>
@@ -89,11 +96,11 @@ const ChapterList = (props: Props) => {
 export default connect((state: BaseProps) => ({ theme: state.theme }))(React.memo(ChapterList, (prevProps: any, nextProps: any) => is(fromJS(prevProps), fromJS(nextProps))))
 
 const space = 10
-const width = Dimensions.get('window').width/3 - space * 2
+const width = Dimensions.get('window').width / 3 - space * 2
 
 const styles = StyleSheet.create({
     white: {
-       color: '#fff', 
+        color: '#fff',
     },
     flex: {
         flex: 1

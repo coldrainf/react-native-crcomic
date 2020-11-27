@@ -1,32 +1,44 @@
-import React, { useState, useEffect, useLayoutEffect } from 'react'
-import { View, Text, StyleSheet, ActivityIndicator, StatusBar } from 'react-native'
+/**
+ * 漫画详情页
+ */
+import React, { useState, useLayoutEffect } from 'react'
+import {
+    View,
+    Text,
+    StyleSheet,
+    ActivityIndicator
+} from 'react-native'
 import { connect } from 'react-redux'
 import { Icon, Image } from 'react-native-elements'
+import { useFocusEffect } from '@react-navigation/native'
 
-import CustomButton from '../component/button'
-import Loading from '../component/loading'
 import api from '../../config/api'
 import storage from '../storage'
+import CustomButton from '../component/button'
+import Loading from '../component/loading'
 import Top from '../component/top'
 import Footer from '../component/item/footer'
 import ChapterList from '../component/item/chapterList'
-import { useFocusEffect } from '@react-navigation/native'
+
 
 const Item = (props: BaseProps) => {
     const item: ItemData = props.route.params
-    let [data, setData] = useState(item as ItemData)
+    //漫画详细数据
+    let [data, setData] = useState<ItemData>(item)
     let [loading, setLoading] = useState(true)
-    let [history, setHistory] = useState(false as any)
+    //历史数据
+    let [history, setHistory] = useState<any>(false)
 
     const getHistory = () => {
-        storage.load({ key: 'history', id: data.originId+'-'+data.id }).then(res => {
-            if(res) setHistory(history=res)
+        storage.load({ key: 'history', id: data.originId + '-' + data.id }).then(res => {
+            if (res) setHistory(history = res)
         })
     }
 
+    //获取漫画详细数据
     useLayoutEffect(() => {
         api(`/${item.originId}/item?id=${item.id}`).then((res: ItemRes) => {
-            if(res.code != 0) return
+            if (res.code != 0) return
             setLoading(false)
             setData(res.data)
             getHistory()
@@ -36,55 +48,71 @@ const Item = (props: BaseProps) => {
     useFocusEffect(React.useCallback(getHistory, []))
 
     return (
-        <View style={[styles.flex, { backgroundColor: props.theme } ]}>
-        <Top />
-        <View style={[styles.headerContainer, { backgroundColor: props.theme } ]}>
-            <Text style={styles.headerText} numberOfLines={1}>{item.name}</Text>
-            <View style={styles.headerBackOuterContainer}>
-                <CustomButton onPress={()=>props.navigation.goBack()}>
-                    <View style={styles.headerBackContainer} >
-                        <Icon name='arrowleft' type='antdesign' color='#fff' size={30} />
-                    </View>
-                </CustomButton>
+        <View style={[styles.flex, { backgroundColor: props.theme }]}>
+            <Top />
+            <View style={[styles.headerContainer, { backgroundColor: props.theme }]}>
+                <Text
+                    style={styles.headerText}
+                    numberOfLines={1}
+                >
+                    {item.name}
+                </Text>
+                <View style={styles.headerBackOuterContainer}>
+                    <CustomButton onPress={() => props.navigation.goBack()}>
+                        <View style={styles.headerBackContainer} >
+                            <Icon name='arrowleft' type='antdesign' color='#fff' size={30} />
+                        </View>
+                    </CustomButton>
+                </View>
             </View>
-        </View>
-        {
-            loading && <Loading />
-        }
-        {
-            !loading && <View style={styles.flex}>
-                <View style={[styles.detailOuterContainer, { backgroundColor: props.theme }]}>
-                    <Image
-                        source={{ 
-                            uri: data.cover,
-                            headers: { Referer: data.cover } 
-                        }} 
-                        style={styles.image}
-                        PlaceholderContent={<ActivityIndicator color={props.theme} size='large' />}
-                        placeholderStyle={styles.placeholderStyle}
-                        containerStyle={styles.imageContainer}
+            {
+                loading && <Loading />
+            }
+            {
+                !loading && <View style={styles.flex}>
+                    <View style={[styles.detailOuterContainer, { backgroundColor: props.theme }]}>
+                        <Image
+                            source={{
+                                uri: data.cover,
+                                headers: { Referer: data.cover }
+                            }}
+                            style={styles.image}
+                            PlaceholderContent={<ActivityIndicator color={props.theme} size='large' />}
+                            placeholderStyle={styles.placeholderStyle}
+                            containerStyle={styles.imageContainer}
+                        />
+                        <View style={styles.detailContainer}>
+                            <Text style={styles.text}>{data.originName}</Text>
+                            <Text style={styles.text}>{data.author?.join(' ')}</Text>
+                            <Text style={styles.text}>{data.type?.join(' ')}</Text>
+                            <Text style={styles.text}>{data.area}</Text>
+                            <Text style={styles.text} numberOfLines={6}>{data.desc}</Text>
+                        </View>
+                    </View>
+                    <View style={[styles.detailBottom, { backgroundColor: props.theme }]}>
+                        <Text style={styles.text}>{data.status}</Text>
+                        <Text style={styles.text}>{data.updateTime}</Text>
+                    </View>
+                    <View style={styles.flex}>
+                        {
+                            typeof data.chapters != 'undefined' &&
+                            <ChapterList
+                                item={item}
+                                data={data}
+                                navigation={props.navigation}
+                                history={history}
+                            />
+                        }
+                    </View>
+                    <Footer
+                        item={item}
+                        data={data}
+                        navigation={props.navigation}
+                        history={history}
                     />
-                    <View style={styles.detailContainer}>
-                        <Text style={styles.text}>{data.originName}</Text>
-                        <Text style={styles.text}>{data.author?.join(' ')}</Text>
-                        <Text style={styles.text}>{data.type?.join(' ')}</Text>
-                        <Text style={styles.text}>{data.area}</Text>
-                        <Text style={styles.text} numberOfLines={6}>{data.desc}</Text>
-                    </View>
                 </View>
-                <View style={[styles.detailBottom, { backgroundColor: props.theme}]}>
-                    <Text style={styles.text}>{data.status}</Text>
-                    <Text style={styles.text}>{data.updateTime}</Text>
-                </View>
-                <View style={styles.flex}>
-                    {
-                        typeof data.chapters != 'undefined' && <ChapterList item={item} data={data} navigation={props.navigation} history={history} />
-                    }
-                </View>
-                <Footer item={item} data={data} navigation={props.navigation} history={history} />
-            </View>
 
-        }
+            }
         </View>
     )
 }
@@ -93,7 +121,7 @@ export default connect((state: BaseProps) => ({ theme: state.theme }))(React.mem
 
 const styles = StyleSheet.create({
     white: {
-       color: '#fff', 
+        color: '#fff',
     },
     flex: {
         flex: 1
@@ -113,9 +141,9 @@ const styles = StyleSheet.create({
         color: '#fff'
     },
     headerBackOuterContainer: {
-        position:'absolute',
+        position: 'absolute',
         left: 6,
-        bottom:0,
+        bottom: 0,
         width: 50,
         height: 50,
         borderRadius: 25,
@@ -143,7 +171,7 @@ const styles = StyleSheet.create({
         backgroundColor: '#ccc'
     },
     detailContainer: {
-        flex:1,
+        flex: 1,
         marginLeft: 14
     },
     text: {
