@@ -9,7 +9,8 @@
     "start": "react-native start",
     "test": "jest",
     "lint": "eslint .",
-    "mumu": "adb connect 127.0.0.1:7555"
+    "mumu": "adb connect 127.0.0.1:7555",
+    "testapi": "nodemon --watch api -e js,ts --exec npx ts-node ./api/__test__/index.ts"
   },
   "dependencies": {
     "@react-native-community/async-storage": "^1.12.0",
@@ -19,6 +20,7 @@
     "@react-navigation/bottom-tabs": "^5.8.0",
     "@react-navigation/native": "^5.7.3",
     "@react-navigation/stack": "^5.9.0",
+    "cheerio": "^1.0.0-rc.5",
     "immutable": "^4.0.0-rc.12",
     "react": "16.13.1",
     "react-native": "0.63.2",
@@ -43,6 +45,9 @@
     "@react-native-community/eslint-config": "^1.1.0",
     "@types/immutable": "^3.8.7",
     "@types/jest": "^26.0.10",
+    "@types/koa": "^2.11.7",
+    "@types/koa-router": "^7.4.1",
+    "@types/node-fetch": "^2.5.8",
     "@types/react": "^16.9.47",
     "@types/react-native": "^0.63.10",
     "@types/react-native-elements": "^0.18.0",
@@ -53,8 +58,13 @@
     "babel-jest": "^25.1.0",
     "eslint": "^6.5.1",
     "jest": "^25.1.0",
+    "koa": "^2.13.1",
+    "koa-router": "^10.0.0",
     "metro-react-native-babel-preset": "^0.59.0",
+    "node-fetch": "^2.6.1",
+    "nodemon": "^2.0.7",
     "react-test-renderer": "16.13.1",
+    "ts-node": "^9.1.1",
     "typescript": "^4.0.2"
   },
   "jest": {
